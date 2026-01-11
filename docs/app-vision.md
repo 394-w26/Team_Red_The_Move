@@ -1,52 +1,56 @@
 # Name
 
-- The app is called TeamTime.
+- The app is called The Move.
 
 # Users
 
-- Users are software development teams who do mob programming with drivers and navigators.
+- Users are Northwestern students who want to find spontaneous hangouts or host them.
 
 # Value proposition
 
-An easy to use rotation timer for managing and tracking mob programming sessions.
+A real-time social feed to discover campus activities and join with one tap to avoid the noise of group chats.
 
 # Key features
 
-Simple mobile-friendly one-screen design with the app name at the top, and below it:
-  - large countdown timer, defaulting to 10 minutes, but adjustable at the start of each session,
-  - a single start/pause buttonm
-  - the team members, shuffled at the start of each session, with the first name highlighted
+Simple mobile-friendly design with a bottom navigation bar for Explore and Create and My Moves tabs:
+  - A top banner displaying Open Events and a live counter of available moves.
+  - A scrollable Explore feed of cards with the newest items first.
+  - Filter chips at the top for campus areas such as North and South and Downtown and Other.
+  - A search bar to filter moves by keyword.
+  - Move cards showing title and description and location and time and participant count and a Join button.
+  - Move cards display a status badge saying Live Now if the event has started or Upcoming if it is scheduled for later.
+
 Simple operations:
-  - Tap a name to skip or include that team member in the rotation.
-  - Tap start to start the timer, tap again to pause it.
-  - When one minute is left, timer beeps and starts flashing.
-  - When time is up, timer sounds an alarm, resets time, rotates to the next team member, and waits for start.
-Recording-keeping:
-  - At end of each turn, the app logs to the console the current time, rotation duration setting, the driver, and the navigators.
+  - Tap a card to open the Move Detail page full screen.
+  - Tap Join to RSVP which reveals the hidden attendee list on the Detail page.
+  - Tap Post in the Create tab to publish a move with title and description and location and time.
+  - Tap Cancel on a move you created to remove it from the feed.
+  - Tap Leave on a move you joined to remove your RSVP.
+
+Data management:
+  - The My Moves tab has two sub-tabs called Joined for moves you RSVPed to and Hosting for moves you posted.
+  - Comments section at the bottom of the Move Detail page for coordination.
 
 # Example scenario
 
-Here is an example session.
-
-- Alice, Bob, Cathy, and Dave are a team of developers.
-- Alice, Cathy, and Dave meet to do mob programming for 90 minutes.
-- Alice starts the app on her phone. 
-- It shows a countdown timer, set to 10 minutes, a start button, and a shuffled list of team member names with checkmarks.
-- The first name is highlighted. It happens to be Bob.
-- Alice taps Bob's nam because he is not there. The highlight moves to Dave.
-- Dave sits at the keyboard and starts the timer. He begins entering code suggested by the other team members. 
-- Pizza arrives, so Dave stops the timer and grabs a slice. After a few minutes, he starts the timer to continue his turn.
-- A beep at 9 minutes warns the team is almost time to rotate.
-- Whem time goes to zero, an alarm sounds. Dave stops. The highlight moves to Cathy
-- Cathy taps the start button to begin her turn.
+Here is an example session:
+- Alec is a sophomore looking for something to do.
+- Alec opens the app to the Explore feed and sees the header Open Events.
+- He taps the North Campus filter chip to see relevant moves.
+- He sees a Frisbee move labeled Live Now and taps the card.
+- The Detail page opens and he sees the description but the attendee list is hidden.
+- Alec taps Join and the button says Joined and the attendee list becomes visible.
+- Later Alec goes to the My Moves tab and clicks Hosting and cancels a study session labeled Upcoming he posted earlier.
 
 # Coding notes
 
-- Use setInterval() to implement the timer.
-- Use AudioContext to play sounds.
-- Define and import a MockAudioContext class for unit testing sounds. 
+- Use localStorage to store the list of moves and the user RSVPs and comments.
+- Use a simple User object in state to track which moves belong to the user.
+- Use Northwestern Purple (#4E2A84) as the primary color.
+- Use setInterval() to update time ago labels and to toggle the status badge between Live Now and Upcoming based on the current time.
 
 # Testing notes
-- Define unit tests for skipping team members in the rotation.
-- Define unit tests for when Start and Stop should appear.
-- Define unit tests for when sounds should happen.
+- Define unit tests for the Join button to ensure it increments count and reveals attendees.
+- Define unit tests for the North Campus filter to ensure it hides South Campus moves.
+- Define unit tests for the My Moves tabs to ensure it correctly separates Joined moves and Hosting moves.
+- Define unit tests to verify that moves with past start times show Live Now and future start times show Upcoming.
