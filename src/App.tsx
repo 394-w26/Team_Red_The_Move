@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 type CampusArea = 'North' | 'South' | 'Downtown' | 'Other'
+type ActivityType = 'Food' | 'Study' | 'Sports' | 'Social' | 'Other'
 
 type Comment = {
   id: string
@@ -14,9 +15,11 @@ type Move = {
   title: string
   description: string
   location: string
-  time: string
+  startTime: string
+  endTime: string
   createdAt: string
   area: CampusArea
+  activityType: ActivityType
   hostId: string
   hostName: string
   attendees: string[]
@@ -30,6 +33,25 @@ type User = {
 
 const STORAGE_KEY = 'the-move-moves'
 const AREA_FILTERS: Array<'All' | CampusArea> = ['All', 'North', 'South', 'Downtown', 'Other']
+const ACTIVITY_FILTERS: Array<'All' | ActivityType> = [
+  'All',
+  'Food',
+  'Study',
+  'Sports',
+  'Social',
+  'Other',
+]
+const FILTER_OPTIONS: Array<'All' | CampusArea | ActivityType> = [
+  'All',
+  'North',
+  'South',
+  'Downtown',
+  'Food',
+  'Study',
+  'Sports',
+  'Social',
+  'Other',
+]
 
 const seedMoves: Move[] = [
   {
@@ -37,9 +59,11 @@ const seedMoves: Move[] = [
     title: 'Frisbee at the Lakefill',
     description: 'Sunset toss and casual hangout by the lake. Bring a water bottle.',
     location: 'Lakefill Fields',
-    time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
     area: 'North',
+    activityType: 'Sports',
     hostId: 'user-2',
     hostName: 'Maya',
     attendees: ['Maya'],
@@ -57,9 +81,11 @@ const seedMoves: Move[] = [
     title: 'Study Sprint at Main Library',
     description: 'Power hour in the commons with focus playlists.',
     location: 'Main Library, 2nd Floor',
-    time: new Date(Date.now() + 3.5 * 60 * 60 * 1000).toISOString(),
+    startTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000).toISOString(),
+    endTime: new Date(Date.now() + 4.5 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
     area: 'South',
+    activityType: 'Study',
     hostId: 'user-1',
     hostName: 'Alec',
     attendees: ['Alec'],
@@ -70,9 +96,11 @@ const seedMoves: Move[] = [
     title: 'Bubble Tea Run',
     description: 'Quick trip downtown for boba and a walk back.',
     location: 'Davis Street CTA',
-    time: new Date(Date.now() + 90 * 60 * 1000).toISOString(),
+    startTime: new Date(Date.now() + 90 * 60 * 1000).toISOString(),
+    endTime: new Date(Date.now() + 2.5 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     area: 'Downtown',
+    activityType: 'Food',
     hostId: 'user-3',
     hostName: 'Zoe',
     attendees: ['Zoe', 'Alec'],
@@ -108,6 +136,30 @@ const safeParseMoves = (value: string | null) => {
   }
 }
 
+const normalizeMove = (move: Move & { time?: string }): Move => {
+  const startTime = move.startTime ?? move.time ?? new Date().toISOString()
+  const startTimestamp = new Date(startTime).getTime()
+  const endTime =
+    move.endTime ??
+    (Number.isNaN(startTimestamp)
+      ? new Date().toISOString()
+      : new Date(startTimestamp + 60 * 60 * 1000).toISOString())
+  const seededActivityType =
+    move.id === 'move-1'
+      ? 'Sports'
+      : move.id === 'move-2'
+        ? 'Study'
+        : move.id === 'move-3'
+          ? 'Food'
+          : undefined
+  return {
+    ...move,
+    startTime,
+    endTime,
+    activityType: move.activityType ?? seededActivityType ?? 'Other',
+  }
+}
+
 const formatTimeAgo = (isoTime: string, now: number) => {
   const timestamp = new Date(isoTime).getTime()
   if (Number.isNaN(timestamp)) return 'just now'
@@ -131,15 +183,18 @@ const formatEventTime = (isoTime: string) => {
   })
 }
 
-const getStatusLabel = (isoTime: string, now: number) => {
-  const timestamp = new Date(isoTime).getTime()
-  if (Number.isNaN(timestamp)) return 'Upcoming'
-  return timestamp <= now ? 'Live Now' : 'Upcoming'
+const getStatusLabel = (startTime: string, endTime: string, now: number) => {
+  const start = new Date(startTime).getTime()
+  const end = new Date(endTime).getTime()
+  if (Number.isNaN(start) || Number.isNaN(end)) return 'Upcoming'
+  if (now < start) return 'Upcoming'
+  if (now <= end) return 'Live Now'
+  return 'Past'
 }
 
 const loadMoves = (): Move[] => {
   const stored = safeParseMoves(localStorage.getItem(STORAGE_KEY))
-  if (stored && stored.length > 0) return stored
+  if (stored && stored.length > 0) return stored.map(normalizeMove)
   return seedMoves
 }
 
@@ -151,7 +206,7 @@ const App = () => {
   const [moves, setMoves] = useState<Move[]>(() => loadMoves())
   const [activeTab, setActiveTab] = useState<'explore' | 'create' | 'my'>('explore')
   const [myMovesTab, setMyMovesTab] = useState<'joined' | 'hosting'>('joined')
-  const [filterArea, setFilterArea] = useState<'All' | CampusArea>('All')
+  const [selectedFilters, setSelectedFilters] = useState<Array<CampusArea | ActivityType>>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null)
   const [commentDraft, setCommentDraft] = useState('')
@@ -160,8 +215,10 @@ const App = () => {
     title: '',
     description: '',
     location: '',
-    time: '',
+    startTime: '',
+    endTime: '',
     area: 'North' as CampusArea,
+    activityType: 'Social' as ActivityType,
   })
   const [formError, setFormError] = useState('')
 
@@ -186,15 +243,41 @@ const App = () => {
   const filteredMoves = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
     return moves.filter((move) => {
-      const matchesArea = filterArea === 'All' || move.area === filterArea
-      if (!matchesArea) return false
+      const matchesFilters =
+        selectedFilters.length === 0 ||
+        selectedFilters.some((filter) => {
+          const locationTag = move.area
+          if (filter === 'Other') {
+            return locationTag === 'Other' || move.activityType === 'Other'
+          }
+          if (AREA_FILTERS.includes(filter as CampusArea)) {
+            return locationTag === filter
+          }
+          if (ACTIVITY_FILTERS.includes(filter as ActivityType)) {
+            return move.activityType === filter
+          }
+          return false
+        })
+      if (!matchesFilters) return false
       if (!query) return true
       const haystack = `${move.title} ${move.description} ${move.location}`.toLowerCase()
       return haystack.includes(query)
     })
-  }, [moves, filterArea, searchQuery])
+  }, [moves, selectedFilters, searchQuery])
 
-  const exploreMoves = useMemo(() => sortByNewest(filteredMoves), [filteredMoves])
+  const exploreMoves = useMemo(() => {
+    const statusRank = (move: Move) => {
+      const status = getStatusLabel(move.startTime, move.endTime, now)
+      if (status === 'Live Now') return 0
+      if (status === 'Upcoming') return 1
+      return 2
+    }
+    return [...filteredMoves].sort((a, b) => {
+      const statusDelta = statusRank(a) - statusRank(b)
+      if (statusDelta !== 0) return statusDelta
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  }, [filteredMoves, now])
 
   const joinedMoves = useMemo(() => {
     return sortByNewest(
@@ -238,8 +321,23 @@ const App = () => {
 
   const handleCreateMove = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!formState.title || !formState.description || !formState.location || !formState.time) {
-      setFormError('Add a title, description, location, and time to post a move.')
+    if (
+      !formState.title ||
+      !formState.description ||
+      !formState.location ||
+      !formState.startTime ||
+      !formState.endTime ||
+      !formState.activityType
+    ) {
+      setFormError(
+        'Add a title, description, location, activity type, start time, and end time to post a move.',
+      )
+      return
+    }
+    const start = new Date(formState.startTime).getTime()
+    const end = new Date(formState.endTime).getTime()
+    if (Number.isNaN(start) || Number.isNaN(end) || end <= start) {
+      setFormError('End time must be after the start time.')
       return
     }
     setFormError('')
@@ -248,16 +346,26 @@ const App = () => {
       title: formState.title.trim(),
       description: formState.description.trim(),
       location: formState.location.trim(),
-      time: new Date(formState.time).toISOString(),
+      startTime: new Date(formState.startTime).toISOString(),
+      endTime: new Date(formState.endTime).toISOString(),
       createdAt: new Date().toISOString(),
       area: formState.area,
+      activityType: formState.activityType,
       hostId: user.id,
       hostName: user.name,
       attendees: [user.name],
       comments: [],
     }
     setMoves((prevMoves) => [newMove, ...prevMoves])
-    setFormState({ title: '', description: '', location: '', time: '', area: 'North' })
+    setFormState({
+      title: '',
+      description: '',
+      location: '',
+      startTime: '',
+      endTime: '',
+      area: 'North',
+      activityType: 'Social',
+    })
     setActiveTab('explore')
   }
 
@@ -282,7 +390,7 @@ const App = () => {
 
   const renderMoveCard = (move: Move) => {
     const isJoined = move.attendees.includes(user.name)
-    const statusLabel = getStatusLabel(move.time, now)
+    const statusLabel = getStatusLabel(move.startTime, move.endTime, now)
     return (
       <article className="move-card" key={move.id}>
         <div
@@ -304,17 +412,27 @@ const App = () => {
               <p className="move-card__subtitle">Hosted by {move.hostName}</p>
             </div>
             <div className="move-card__status">
-              <span className="status-badge">{statusLabel}</span>
+              <span
+                className={`status-badge ${statusLabel === 'Past' ? 'status-badge--past' : ''}`}
+              >
+                {statusLabel}
+              </span>
               <span className="move-card__time">{formatTimeAgo(move.createdAt, now)}</span>
             </div>
           </div>
           <p className="move-card__description">{move.description}</p>
-          <div className="move-card__meta">
-            <span>{move.location}</span>
-            <span>{formatEventTime(move.time)}</span>
-          </div>
+                        <div className="move-card__meta">
+                          <span>{move.location}</span>
+                          <span>
+                            {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
+                          </span>
+                          <span>{move.activityType}</span>
+                        </div>
           <div className="move-card__footer">
-            <span className="chip chip--soft">{move.area}</span>
+            <div className="move-card__tags">
+              <span className="chip chip--soft">{move.area}</span>
+              <span className="chip chip--soft">{move.activityType}</span>
+            </div>
             <div className="move-card__actions">
               <span className="attendee-count">{move.attendees.length} going</span>
               <button
@@ -344,16 +462,6 @@ const App = () => {
             <h1>The Move</h1>
             <p className="tagline">A live feed for spontaneous campus plans.</p>
           </div>
-          <div className="header-card">
-            <div>
-              <h2>Open Events</h2>
-              <p>Filter by neighborhood or search by vibe in one tap.</p>
-            </div>
-            <div className="header-card__stat">
-              <span>Open</span>
-              <strong>{moves.length} moves</strong>
-            </div>
-          </div>
         </header>
 
         {activeTab === 'explore' && (
@@ -367,17 +475,33 @@ const App = () => {
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
             </label>
-            <div className="chip-row" role="tablist" aria-label="Campus areas">
-              {AREA_FILTERS.map((area) => (
-                <button
-                  key={area}
-                  type="button"
-                  className={`chip ${filterArea === area ? 'chip--active' : ''}`}
-                  onClick={() => setFilterArea(area)}
-                >
-                  {area}
-                </button>
-              ))}
+            <div className="chip-row" role="tablist" aria-label="Filters">
+              {FILTER_OPTIONS.map((filter) => {
+                const isAll = filter === 'All'
+                const isActive = isAll
+                  ? selectedFilters.length === 0
+                  : selectedFilters.includes(filter as CampusArea | ActivityType)
+                return (
+                  <button
+                    key={filter}
+                    type="button"
+                    className={`chip ${isActive ? 'chip--active' : ''}`}
+                    onClick={() => {
+                      if (isAll) {
+                        setSelectedFilters([])
+                        return
+                      }
+                      setSelectedFilters((prev) =>
+                        prev.includes(filter as CampusArea | ActivityType)
+                          ? prev.filter((item) => item !== filter)
+                          : [...prev, filter as CampusArea | ActivityType],
+                      )
+                    }}
+                  >
+                    {filter}
+                  </button>
+                )
+              })}
             </div>
           </section>
         )}
@@ -438,14 +562,46 @@ const App = () => {
                 </label>
                 <div className="form-row">
                   <label>
-                    <span>Time</span>
+                    <span>Start Time</span>
                     <input
                       type="datetime-local"
-                      value={formState.time}
+                      value={formState.startTime}
                       onChange={(event) =>
-                        setFormState((prev) => ({ ...prev, time: event.target.value }))
+                        setFormState((prev) => ({ ...prev, startTime: event.target.value }))
                       }
                     />
+                  </label>
+                  <label>
+                    <span>End Time</span>
+                    <input
+                      type="datetime-local"
+                      value={formState.endTime}
+                      onChange={(event) =>
+                        setFormState((prev) => ({ ...prev, endTime: event.target.value }))
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="form-row">
+                  <label>
+                    <span>Activity Type</span>
+                    <select
+                      value={formState.activityType}
+                      onChange={(event) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          activityType: event.target.value as ActivityType,
+                        }))
+                      }
+                    >
+                      {ACTIVITY_FILTERS.filter((activity) => activity !== 'All').map(
+                        (activity) => (
+                          <option key={activity} value={activity}>
+                            {activity}
+                          </option>
+                        ),
+                      )}
+                    </select>
                   </label>
                   <label>
                     <span>Area</span>
@@ -507,8 +663,14 @@ const App = () => {
                             <p className="move-card__subtitle">Hosted by {move.hostName}</p>
                           </div>
                           <div className="move-card__status">
-                            <span className="status-badge">
-                              {getStatusLabel(move.time, now)}
+                            <span
+                              className={`status-badge ${
+                                getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                                  ? 'status-badge--past'
+                                  : ''
+                              }`}
+                            >
+                              {getStatusLabel(move.startTime, move.endTime, now)}
                             </span>
                             <span className="move-card__time">
                               {formatTimeAgo(move.createdAt, now)}
@@ -517,8 +679,11 @@ const App = () => {
                         </div>
                         <div className="move-card__meta">
                           <span>{move.location}</span>
-                          <span>{formatEventTime(move.time)}</span>
-                            </div>
+                          <span>
+                            {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
+                          </span>
+                          <span>{move.activityType}</span>
+                        </div>
                             <div className="move-card__footer">
                               <span className="attendee-count">
                                 {move.attendees.length} going
@@ -565,8 +730,14 @@ const App = () => {
                             <p className="move-card__subtitle">You&apos;re hosting</p>
                           </div>
                           <div className="move-card__status">
-                            <span className="status-badge">
-                              {getStatusLabel(move.time, now)}
+                            <span
+                              className={`status-badge ${
+                                getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                                  ? 'status-badge--past'
+                                  : ''
+                              }`}
+                            >
+                              {getStatusLabel(move.startTime, move.endTime, now)}
                             </span>
                             <span className="move-card__time">
                               {formatTimeAgo(move.createdAt, now)}
@@ -575,7 +746,9 @@ const App = () => {
                         </div>
                         <div className="move-card__meta">
                           <span>{move.location}</span>
-                          <span>{formatEventTime(move.time)}</span>
+                          <span>
+                            {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
+                          </span>
                             </div>
                             <div className="move-card__footer">
                               <span className="attendee-count">
@@ -655,8 +828,14 @@ const App = () => {
                 <p className="detail__subtitle">Hosted by {selectedMove.hostName}</p>
               </div>
               <div className="detail__status">
-                <span className="status-badge">
-                  {getStatusLabel(selectedMove.time, now)}
+                <span
+                  className={`status-badge ${
+                    getStatusLabel(selectedMove.startTime, selectedMove.endTime, now) === 'Past'
+                      ? 'status-badge--past'
+                      : ''
+                  }`}
+                >
+                  {getStatusLabel(selectedMove.startTime, selectedMove.endTime, now)}
                 </span>
                 <span className="detail__time">
                   {formatTimeAgo(selectedMove.createdAt, now)}
@@ -671,7 +850,14 @@ const App = () => {
               </div>
               <div>
                 <strong>Time</strong>
-                <span>{formatEventTime(selectedMove.time)}</span>
+                <span>
+                  {formatEventTime(selectedMove.startTime)} -{' '}
+                  {formatEventTime(selectedMove.endTime)}
+                </span>
+              </div>
+              <div>
+                <strong>Activity</strong>
+                <span>{selectedMove.activityType}</span>
               </div>
             </div>
             <div className="detail__actions">

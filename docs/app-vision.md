@@ -12,18 +12,17 @@ A real-time social feed to discover campus activities and join with one tap to a
 
 # Key features
 
-Simple mobile-friendly design with a bottom navigation bar for Explore and Create and My Moves tabs:
-  - A top banner displaying Open Events and a live counter of available moves.
+Simple mobile-friendly design with a bottom navigation bar for Explore, Create, and My Moves tabs:
   - A scrollable Explore feed of cards with the newest items first.
-  - Filter chips at the top for campus areas such as North and South and Downtown and Other.
+  - Filter chips at the top for campus areas such as North, South, Downtown, and Other, and a second set of filter chips for activity type such as Food, Study, Sports, Social, and Other.
   - A search bar to filter moves by keyword.
-  - Move cards showing title and description and location and time and participant count and a Join button.
-  - Move cards display a status badge saying Live Now if the event has started or Upcoming if it is scheduled for later.
+  - Move cards showing title, description, location, start time, end time, activity type, participant count, and a Join button.
+  - Move cards display a status badge saying Live Now if the event has started, Upcoming if it is scheduled for later, or Past if the it has ended.
 
 Simple operations:
   - Tap a card to open the Move Detail page full screen.
   - Tap Join to RSVP which reveals the hidden attendee list on the Detail page.
-  - Tap Post in the Create tab to publish a move with title and description and location and time.
+  - Tap Post in the Create tab to publish a move with title, description, location, activity type, start time, and end time.
   - Tap Cancel on a move you created to remove it from the feed.
   - Tap Leave on a move you joined to remove your RSVP.
 
@@ -40,7 +39,7 @@ Here is an example session:
 - He sees a Frisbee move labeled Live Now and taps the card.
 - The Detail page opens and he sees the description but the attendee list is hidden.
 - Alec taps Join and the button says Joined and the attendee list becomes visible.
-- Later Alec goes to the My Moves tab and clicks Hosting and cancels a study session labeled Upcoming he posted earlier.
+- Later Alec goes to the My Moves tab, clicks Hosting, and cancels a study session labeled Upcoming he posted earlier.
 
 # Coding notes
 
@@ -48,6 +47,7 @@ Here is an example session:
 - Use a simple User object in state to track which moves belong to the user.
 - Use Northwestern Purple (#4E2A84) as the primary color.
 - Use setInterval() to update time ago labels and to toggle the status badge between Live Now and Upcoming based on the current time.
+- Use the current time to compute status as Upcoming before start time, Live Now between start time and end time, and Past after end time.
 
 # Testing notes
 - Define unit tests for the Join button to ensure it increments count and reveals attendees.

@@ -46,7 +46,7 @@ test('My Moves tabs separate Joined moves and Hosting moves', () => {
   expect(screen.queryByText(/bubble tea run/i)).not.toBeInTheDocument()
 })
 
-test('moves show Live Now for past times and Upcoming for future times', () => {
+test('moves show Upcoming before start, Live Now during, and Past after end', () => {
   const now = Date.now()
   const moves = [
     {
@@ -54,12 +54,29 @@ test('moves show Live Now for past times and Upcoming for future times', () => {
       title: 'Late Night Snacks',
       description: 'Runs to the vending machines.',
       location: 'Elder Hall',
-      time: new Date(now - 60 * 60 * 1000).toISOString(),
+      startTime: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+      endTime: new Date(now - 60 * 60 * 1000).toISOString(),
       createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
       area: 'North',
+      activityType: 'Food',
       hostId: 'user-2',
       hostName: 'Maya',
       attendees: ['Maya'],
+      comments: [],
+    },
+    {
+      id: 'live-move',
+      title: 'Courtyard Hang',
+      description: 'Chill chat between classes.',
+      location: 'Kresge Hall',
+      startTime: new Date(now - 30 * 60 * 1000).toISOString(),
+      endTime: new Date(now + 30 * 60 * 1000).toISOString(),
+      createdAt: new Date(now - 45 * 60 * 1000).toISOString(),
+      area: 'South',
+      activityType: 'Social',
+      hostId: 'user-3',
+      hostName: 'Zoe',
+      attendees: ['Zoe'],
       comments: [],
     },
     {
@@ -67,9 +84,11 @@ test('moves show Live Now for past times and Upcoming for future times', () => {
       title: 'Morning Walk',
       description: 'Quick loop around campus.',
       location: 'The Arch',
-      time: new Date(now + 60 * 60 * 1000).toISOString(),
+      startTime: new Date(now + 60 * 60 * 1000).toISOString(),
+      endTime: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(now - 30 * 60 * 1000).toISOString(),
       area: 'South',
+      activityType: 'Other',
       hostId: 'user-3',
       hostName: 'Zoe',
       attendees: ['Zoe'],
@@ -82,4 +101,5 @@ test('moves show Live Now for past times and Upcoming for future times', () => {
 
   expect(screen.getByText('Live Now')).toBeInTheDocument()
   expect(screen.getAllByText('Upcoming').length).toBeGreaterThan(0)
+  expect(screen.getByText('Past')).toBeInTheDocument()
 })

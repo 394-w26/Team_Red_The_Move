@@ -39,7 +39,7 @@ body {
   margin: 0;
   font-family: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at top, #fef9f1 0%, #f2f5ff 45%, #f5ecff 100%);
+  background: linear-gradient(140deg, rgba(78, 42, 132, 0.22), rgba(249, 196, 92, 0.45));
   min-height: 100vh;
 }
 
@@ -275,6 +275,11 @@ img {
   color: var(--purple);
 }
 
+.status-badge--past {
+  background: rgba(31, 26, 43, 0.08);
+  color: var(--muted);
+}
+
 .move-card__description {
   margin: 0;
   color: var(--plum);
@@ -293,6 +298,12 @@ img {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+}
+
+.move-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .move-card__actions {
