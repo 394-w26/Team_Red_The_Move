@@ -1,4 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react';
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  doc,
+  type DocumentData,
+} from 'firebase/firestore';
+import { db } from './firebase';
 
 type CampusArea = 'North' | 'South' | 'Downtown' | 'Other'
 type ActivityType = 'Food' | 'Study' | 'Sports' | 'Social' | 'Other'
@@ -31,7 +41,6 @@ type User = {
   name: string
 }
 
-const STORAGE_KEY = 'the-move-moves'
 const AREA_FILTERS: Array<'All' | CampusArea> = ['All', 'North', 'South', 'Downtown', 'Other']
 const ACTIVITY_FILTERS: Array<'All' | ActivityType> = [
   'All',
@@ -53,68 +62,6 @@ const FILTER_OPTIONS: Array<'All' | CampusArea | ActivityType> = [
   'Other',
 ]
 
-const seedMoves: Move[] = [
-  {
-    id: 'move-1',
-    title: 'Frisbee at the Lakefill',
-    description: 'Sunset toss and casual hangout by the lake. Bring a water bottle.',
-    location: 'Lakefill Fields',
-    startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    area: 'North',
-    activityType: 'Sports',
-    hostId: 'user-2',
-    hostName: 'Maya',
-    attendees: ['Maya'],
-    comments: [
-      {
-        id: 'comment-1',
-        author: 'Maya',
-        text: 'Meet by the picnic tables facing the lake.',
-        createdAt: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
-      },
-    ],
-  },
-  {
-    id: 'move-2',
-    title: 'Study Sprint at Main Library',
-    description: 'Power hour in the commons with focus playlists.',
-    location: 'Main Library, 2nd Floor',
-    startTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000).toISOString(),
-    endTime: new Date(Date.now() + 4.5 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    area: 'South',
-    activityType: 'Study',
-    hostId: 'user-1',
-    hostName: 'Alec',
-    attendees: ['Alec'],
-    comments: [],
-  },
-  {
-    id: 'move-3',
-    title: 'Bubble Tea Run',
-    description: 'Quick trip downtown for boba and a walk back.',
-    location: 'Davis Street CTA',
-    startTime: new Date(Date.now() + 90 * 60 * 1000).toISOString(),
-    endTime: new Date(Date.now() + 2.5 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    area: 'Downtown',
-    activityType: 'Food',
-    hostId: 'user-3',
-    hostName: 'Zoe',
-    attendees: ['Zoe', 'Alec'],
-    comments: [
-      {
-        id: 'comment-2',
-        author: 'Zoe',
-        text: 'Reply if you want a specific drink!',
-        createdAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
-      },
-    ],
-  },
-]
-
 const defaultUser: User = {
   id: 'user-1',
   name: 'Alec',
@@ -125,40 +72,24 @@ const createId = () =>
     ? crypto.randomUUID()
     : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`
 
-const safeParseMoves = (value: string | null) => {
-  if (!value) return null
-  try {
-    const parsed = JSON.parse(value) as Move[]
-    if (Array.isArray(parsed)) return parsed
-    return null
-  } catch {
-    return null
-  }
-}
-
-const normalizeMove = (move: Move & { time?: string }): Move => {
-  const startTime = move.startTime ?? move.time ?? new Date().toISOString()
-  const startTimestamp = new Date(startTime).getTime()
-  const endTime =
-    move.endTime ??
-    (Number.isNaN(startTimestamp)
-      ? new Date().toISOString()
-      : new Date(startTimestamp + 60 * 60 * 1000).toISOString())
-  const seededActivityType =
-    move.id === 'move-1'
-      ? 'Sports'
-      : move.id === 'move-2'
-        ? 'Study'
-        : move.id === 'move-3'
-          ? 'Food'
-          : undefined
+// Convert Firestore document to Move type
+const firestoreDocToMove = (docData: DocumentData, docId: string): Move => {
   return {
-    ...move,
-    startTime,
-    endTime,
-    activityType: move.activityType ?? seededActivityType ?? 'Other',
-  }
-}
+    id: docId,
+    title: docData.title ?? '',
+    description: docData.description ?? '',
+    location: docData.location ?? '',
+    startTime: docData.startTime ?? new Date().toISOString(),
+    endTime: docData.endTime ?? new Date().toISOString(),
+    createdAt: docData.createdAt ?? new Date().toISOString(),
+    area: (docData.area ?? 'Other') as CampusArea,
+    activityType: (docData.activityType ?? 'Other') as ActivityType,
+    hostId: docData.hostId ?? '',
+    hostName: docData.hostName ?? '',
+    attendees: Array.isArray(docData.attendees) ? docData.attendees : [],
+    comments: Array.isArray(docData.comments) ? docData.comments : [],
+  };
+};
 
 const formatTimeAgo = (isoTime: string, now: number) => {
   const timestamp = new Date(isoTime).getTime()
@@ -192,25 +123,19 @@ const getStatusLabel = (startTime: string, endTime: string, now: number) => {
   return 'Past'
 }
 
-const loadMoves = (): Move[] => {
-  const stored = safeParseMoves(localStorage.getItem(STORAGE_KEY))
-  if (stored && stored.length > 0) return stored.map(normalizeMove)
-  return seedMoves
-}
-
 const sortByNewest = (moves: Move[]) =>
   [...moves].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
 const App = () => {
-  const [user] = useState<User>(defaultUser)
-  const [moves, setMoves] = useState<Move[]>(() => loadMoves())
-  const [activeTab, setActiveTab] = useState<'explore' | 'create' | 'my'>('explore')
-  const [myMovesTab, setMyMovesTab] = useState<'joined' | 'hosting'>('joined')
-  const [selectedFilters, setSelectedFilters] = useState<Array<CampusArea | ActivityType>>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null)
-  const [commentDraft, setCommentDraft] = useState('')
-  const [now, setNow] = useState(Date.now())
+  const [user] = useState<User>(defaultUser);
+  const [moves, setMoves] = useState<Move[]>([]);
+  const [activeTab, setActiveTab] = useState<'explore' | 'create' | 'my'>('explore');
+  const [myMovesTab, setMyMovesTab] = useState<'joined' | 'hosting'>('joined');
+  const [selectedFilters, setSelectedFilters] = useState<Array<CampusArea | ActivityType>>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [now, setNow] = useState(Date.now());
   const [formState, setFormState] = useState({
     title: '',
     description: '',
@@ -219,17 +144,34 @@ const App = () => {
     endTime: '',
     area: 'North' as CampusArea,
     activityType: 'Social' as ActivityType,
-  })
-  const [formError, setFormError] = useState('')
+  });
+  const [formError, setFormError] = useState('');
+
+  // Listen to Firestore moves collection in real-time
+  useEffect(() => {
+    const movesCollection = collection(db, 'moves');
+    const unsubscribe = onSnapshot(
+      movesCollection,
+      (snapshot) => {
+        const movesData: Move[] = [];
+        snapshot.forEach((docSnapshot) => {
+          const move = firestoreDocToMove(docSnapshot.data(), docSnapshot.id);
+          movesData.push(move);
+        });
+        setMoves(movesData);
+      },
+      (error) => {
+        console.error('Error listening to moves collection:', error);
+      },
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(moves))
-  }, [moves])
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    const interval = setInterval(() => setNow(Date.now()), 30 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setCommentDraft('')
@@ -292,35 +234,46 @@ const App = () => {
     [moves, user.id],
   )
 
-  const handleJoinMove = (moveId: string) => {
-    setMoves((prevMoves) =>
-      prevMoves.map((move) => {
-        if (move.id !== moveId) return move
-        if (move.attendees.includes(user.name)) return move
-        return { ...move, attendees: [...move.attendees, user.name] }
-      }),
-    )
-  }
+  const handleJoinMove = async (moveId: string) => {
+    const move = moves.find((m) => m.id === moveId);
+    if (!move || move.attendees.includes(user.name)) return;
 
-  const handleLeaveMove = (moveId: string) => {
-    setMoves((prevMoves) =>
-      prevMoves.map((move) => {
-        if (move.id !== moveId) return move
-        return {
-          ...move,
-          attendees: move.attendees.filter((attendee) => attendee !== user.name),
-        }
-      }),
-    )
-  }
+    try {
+      const moveRef = doc(db, 'moves', moveId);
+      await updateDoc(moveRef, {
+        attendees: [...move.attendees, user.name],
+      });
+    } catch (error) {
+      console.error('Error joining move:', error);
+    }
+  };
 
-  const handleCancelMove = (moveId: string) => {
-    setMoves((prevMoves) => prevMoves.filter((move) => move.id !== moveId))
-    setSelectedMoveId((current) => (current === moveId ? null : current))
-  }
+  const handleLeaveMove = async (moveId: string) => {
+    const move = moves.find((m) => m.id === moveId);
+    if (!move || !move.attendees.includes(user.name)) return;
 
-  const handleCreateMove = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    try {
+      const moveRef = doc(db, 'moves', moveId);
+      await updateDoc(moveRef, {
+        attendees: move.attendees.filter((attendee) => attendee !== user.name),
+      });
+    } catch (error) {
+      console.error('Error leaving move:', error);
+    }
+  };
+
+  const handleCancelMove = async (moveId: string) => {
+    try {
+      const moveRef = doc(db, 'moves', moveId);
+      await deleteDoc(moveRef);
+      setSelectedMoveId((current) => (current === moveId ? null : current));
+    } catch (error) {
+      console.error('Error canceling move:', error);
+    }
+  };
+
+  const handleCreateMove = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (
       !formState.title ||
       !formState.description ||
@@ -331,62 +284,71 @@ const App = () => {
     ) {
       setFormError(
         'Add a title, description, location, activity type, start time, and end time to post a move.',
-      )
-      return
+      );
+      return;
     }
-    const start = new Date(formState.startTime).getTime()
-    const end = new Date(formState.endTime).getTime()
+    const start = new Date(formState.startTime).getTime();
+    const end = new Date(formState.endTime).getTime();
     if (Number.isNaN(start) || Number.isNaN(end) || end <= start) {
-      setFormError('End time must be after the start time.')
-      return
+      setFormError('End time must be after the start time.');
+      return;
     }
-    setFormError('')
-    const newMove: Move = {
-      id: createId(),
-      title: formState.title.trim(),
-      description: formState.description.trim(),
-      location: formState.location.trim(),
-      startTime: new Date(formState.startTime).toISOString(),
-      endTime: new Date(formState.endTime).toISOString(),
-      createdAt: new Date().toISOString(),
-      area: formState.area,
-      activityType: formState.activityType,
-      hostId: user.id,
-      hostName: user.name,
-      attendees: [user.name],
-      comments: [],
-    }
-    setMoves((prevMoves) => [newMove, ...prevMoves])
-    setFormState({
-      title: '',
-      description: '',
-      location: '',
-      startTime: '',
-      endTime: '',
-      area: 'North',
-      activityType: 'Social',
-    })
-    setActiveTab('explore')
-  }
+    setFormError('');
 
-  const handleAddComment = () => {
-    if (!selectedMove) return
-    const trimmed = commentDraft.trim()
-    if (!trimmed) return
-    setMoves((prevMoves) =>
-      prevMoves.map((move) => {
-        if (move.id !== selectedMove.id) return move
-        const nextComment: Comment = {
-          id: createId(),
-          author: user.name,
-          text: trimmed,
-          createdAt: new Date().toISOString(),
-        }
-        return { ...move, comments: [...move.comments, nextComment] }
-      }),
-    )
-    setCommentDraft('')
-  }
+    try {
+      const movesCollection = collection(db, 'moves');
+      await addDoc(movesCollection, {
+        title: formState.title.trim(),
+        description: formState.description.trim(),
+        location: formState.location.trim(),
+        startTime: new Date(formState.startTime).toISOString(),
+        endTime: new Date(formState.endTime).toISOString(),
+        createdAt: new Date().toISOString(),
+        area: formState.area,
+        activityType: formState.activityType,
+        hostId: user.id,
+        hostName: user.name,
+        attendees: [user.name],
+        comments: [],
+      });
+
+      setFormState({
+        title: '',
+        description: '',
+        location: '',
+        startTime: '',
+        endTime: '',
+        area: 'North',
+        activityType: 'Social',
+      });
+      setActiveTab('explore');
+    } catch (error) {
+      console.error('Error creating move:', error);
+      setFormError('Failed to create move. Please try again.');
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!selectedMove) return;
+    const trimmed = commentDraft.trim();
+    if (!trimmed) return;
+
+    try {
+      const moveRef = doc(db, 'moves', selectedMove.id);
+      const nextComment: Comment = {
+        id: createId(),
+        author: user.name,
+        text: trimmed,
+        createdAt: new Date().toISOString(),
+      };
+      await updateDoc(moveRef, {
+        comments: [...selectedMove.comments, nextComment],
+      });
+      setCommentDraft('');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
 
   const renderMoveCard = (move: Move) => {
     const isJoined = move.attendees.includes(user.name)
