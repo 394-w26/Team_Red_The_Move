@@ -8,6 +8,8 @@ type FormState = {
   description: string;
   remarks: string;
   location: string;
+  locationName?: string;
+  locationUrl?: string;
   latitude?: number;
   longitude?: number;
   startTime: string;
@@ -27,6 +29,8 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
     description: '',
     remarks: '',
     location: '',
+    locationName: undefined,
+    locationUrl: undefined,
     latitude: undefined,
     longitude: undefined,
     startTime: '',
@@ -78,6 +82,8 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
       description: '',
       remarks: '',
       location: '',
+      locationName: undefined,
+      locationUrl: undefined,
       latitude: undefined,
       longitude: undefined,
       startTime: '',
@@ -149,10 +155,14 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
       setFormState((prev) => ({
         ...prev,
         location: details.formattedAddress || prediction.description,
+        locationName: details.name || prediction.description,
+        locationUrl: details.placeId
+          ? `https://www.google.com/maps/search/?api=1&query=place_id:${details.placeId}`
+          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(details.formattedAddress || prediction.description)}`,
         latitude: details.latitude,
         longitude: details.longitude,
       }));
-      setResolvedAddress(details.formattedAddress || prediction.description);
+      setResolvedAddress(details.name || details.formattedAddress || prediction.description);
       setPredictions([]);
     } catch (error) {
       setPredictionError('Could not fetch that place. Try another suggestion.');

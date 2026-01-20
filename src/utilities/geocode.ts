@@ -3,6 +3,7 @@ export type GeocodeResult = {
   longitude: number;
   formattedAddress: string;
   placeId: string;
+  name?: string;
 };
 
 export type PlacePrediction = {
@@ -109,6 +110,7 @@ export const fetchPlaceDetails = async (placeId: string): Promise<GeocodeResult 
           longitude: location.lng(),
           formattedAddress: result.formatted_address ?? '',
           placeId: result.place_id ?? placeId,
+          name: result.name ?? undefined,
         });
       },
     );

@@ -37,6 +37,7 @@ export const MapView = ({ moves, onSelectMove }: MapViewProps) => {
           // Use provided coordinates or calculate from area
           let lat = move.latitude;
           let lng = move.longitude;
+          const displayLocation = move.locationName || move.location;
 
           if (lat === undefined || lng === undefined) {
             const defaultCoords = getDefaultCoordinatesForArea(move.area);
@@ -50,7 +51,7 @@ export const MapView = ({ moves, onSelectMove }: MapViewProps) => {
                 <div className="popup-content" onClick={() => onSelectMove(move.id)}>
                   <h4>{move.title}</h4>
                   <p className="popup-subtitle">by {move.hostName}</p>
-                  <p className="popup-location">{move.location}</p>
+                  <p className="popup-location">{displayLocation}</p>
                   <p className="popup-activity">{move.activityType}</p>
                   <button className="popup-button">View Details</button>
                 </div>
