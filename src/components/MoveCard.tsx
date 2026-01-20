@@ -1,5 +1,10 @@
 import type { Move, ActivityType } from '../types';
-import { formatTimeAgo, formatEventTime, getStatusLabel } from '../utilities/helpers';
+import {
+  formatTimeAgo,
+  formatEventDayDate,
+  formatEventTimeOnly,
+  getStatusLabel,
+} from '../utilities/helpers';
 
 type MoveCardProps = {
   move: Move;
@@ -11,6 +16,7 @@ type MoveCardProps = {
 
 export const MoveCard = ({ move, now, userName, onJoinMove, onSelectMove }: MoveCardProps) => {
   const isJoined = move.attendees.includes(userName);
+  const isHost = move.hostName === userName;
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
   const isFull = move.attendees.length >= move.maxParticipants;
   const isJoinDisabled = !isJoined && isFull;
@@ -44,7 +50,9 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onSelectMove }: Move
           <div className="move-card__header">
             <div>
               <h3>{move.title}</h3>
-              {move.remarks && <p className="move-card__remarks">{move.remarks}</p>}
+              {move.remarks && (
+                <p className="move-card__remarks">Remarks: {move.remarks}</p>
+              )}
               <p className="move-card__subtitle">Hosted by {move.hostName}</p>
             </div>
             <div className="move-card__status">
@@ -60,9 +68,9 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onSelectMove }: Move
           <div className="move-card__meta">
             <span>{move.location}</span>
             <span>
-              {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
+              {formatEventDayDate(move.startTime)} {formatEventTimeOnly(move.startTime)} -{' '}
+              {formatEventTimeOnly(move.endTime)}
             </span>
-            <span>{move.activityType}</span>
           </div>
           <div className="move-card__footer">
             <div className="move-card__tags">
@@ -74,17 +82,17 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onSelectMove }: Move
                 {move.attendees.length}/{move.maxParticipants}
               </span>
               <button
-                className={`btn btn--small ${isJoined ? 'btn--ghost' : 'btn--primary'}`}
+                className={`btn btn--small ${isJoined || isHost ? 'btn--ghost' : 'btn--primary'}`}
                 type="button"
-                aria-label={`${isJoined ? 'Joined' : 'Join'} ${move.title}`}
+                aria-label={`${isHost ? 'Hosting' : isJoined ? 'Joined' : 'Join'} ${move.title}`}
                 disabled={isJoinDisabled}
                 aria-disabled={isJoinDisabled}
                 onClick={(event) => {
                   event.stopPropagation();
-                  if (!isJoined && !isFull) onJoinMove(move.id);
+                  if (!isJoined && !isFull && !isHost) onJoinMove(move.id);
                 }}
               >
-                {isJoined ? 'Joined' : 'Join'}
+                {isHost ? 'Hosting' : isJoined ? 'Joined' : 'Join'}
               </button>
             </div>
           </div>

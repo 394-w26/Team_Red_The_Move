@@ -7,9 +7,14 @@ export const createId = () =>
     : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 export const firestoreDocToMove = (docData: DocumentData, docId: string): Move => {
+  const fallbackMaxParticipants = 12;
+  const attendees = Array.isArray(docData.attendees) ? docData.attendees : [];
   const maxParticipants = Number(docData.maxParticipants);
-  const safeMaxParticipants =
-    Number.isFinite(maxParticipants) && maxParticipants >= 1 ? maxParticipants : 1;
+  const normalizedMaxParticipants =
+    Number.isFinite(maxParticipants) && maxParticipants >= 1
+      ? maxParticipants
+      : fallbackMaxParticipants;
+  const safeMaxParticipants = Math.max(normalizedMaxParticipants, attendees.length);
 
   return {
     id: docId,
@@ -24,7 +29,7 @@ export const firestoreDocToMove = (docData: DocumentData, docId: string): Move =
     activityType: (docData.activityType ?? 'Other'),
     hostId: docData.hostId ?? '',
     hostName: docData.hostName ?? '',
-    attendees: Array.isArray(docData.attendees) ? docData.attendees : [],
+    attendees,
     maxParticipants: safeMaxParticipants,
     comments: Array.isArray(docData.comments) ? docData.comments : [],
   };
@@ -48,6 +53,29 @@ export const formatEventTime = (isoTime: string) => {
   if (Number.isNaN(timestamp.getTime())) return isoTime;
   return timestamp.toLocaleString(undefined, {
     weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
+export const formatEventDayDate = (isoTime: string) => {
+  const timestamp = new Date(isoTime);
+  if (Number.isNaN(timestamp.getTime())) return isoTime;
+  return timestamp.toLocaleString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+export const formatEventTimeOnly = (isoTime: string) => {
+  const timestamp = new Date(isoTime);
+  if (Number.isNaN(timestamp.getTime())) return isoTime;
+  return timestamp.toLocaleString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
   });

@@ -75,10 +75,10 @@ const App = () => {
   const joinedMoves = useMemo(() => {
     return sortByNewest(
       moves.filter(
-        (move) => move.attendees.includes(user.name),
+        (move) => move.attendees.includes(user.name) && move.hostId !== user.id,
       ),
     );
-  }, [moves, user.name]);
+  }, [moves, user.id, user.name]);
 
   const hostingMoves = useMemo(
     () => sortByNewest(moves.filter((move) => move.hostId === user.id)),
@@ -97,20 +97,6 @@ const App = () => {
       });
     } catch (error) {
       console.error('Error joining move:', error);
-    }
-  };
-
-  const handleLeaveMove = async (moveId: string) => {
-    const move = moves.find((m) => m.id === moveId);
-    if (!move || !move.attendees.includes(user.name)) return;
-
-    try {
-      const moveRef = doc(db, 'moves', moveId);
-      await updateDoc(moveRef, {
-        attendees: move.attendees.filter((attendee) => attendee !== user.name),
-      });
-    } catch (error) {
-      console.error('Error leaving move:', error);
     }
   };
 
@@ -284,7 +270,6 @@ const App = () => {
               joinedMoves={joinedMoves}
               hostingMoves={hostingMoves}
               now={now}
-              onLeaveMove={handleLeaveMove}
               onCancelMove={handleCancelMove}
               onSelectMove={setSelectedMoveId}
               onEditMove={setEditingMoveId}
@@ -302,7 +287,6 @@ const App = () => {
           userId={user.id}
           userName={user.name}
           onJoinMove={handleJoinMove}
-          onLeaveMove={handleLeaveMove}
           onCancelMove={handleCancelMove}
           onAddComment={handleAddComment}
           onClose={() => setSelectedMoveId(null)}
