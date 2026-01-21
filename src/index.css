@@ -1303,19 +1303,22 @@ img {
 
 /* Leaflet popup customization */
 .leaflet-popup-content-wrapper {
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 10px 30px rgba(31, 26, 43, 0.2);
-  background: #fff;
-  padding: 0;
+  background: #f3f0f6 !important;
+  padding: 2px !important;
   display: block;
   box-sizing: border-box;
-  border: 1px solid rgba(31, 26, 43, 0.08);
+  border: none;
+  width: fit-content;
 }
 
 .leaflet-popup-content {
-  margin: 0;
-  display: flex;
-  justify-content: center;
+  margin: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 .leaflet-popup-tip {
@@ -1329,28 +1332,27 @@ img {
 }
 
 .map-popup-card {
-  width: max-content;
-  min-width: 420px;
-  max-width: min(600px, 95vw);
+  width: 92vw;
+  max-width: 520px;
   margin: 0 auto;
 }
 
 .map-popup-card .move-card__body--stack {
-  padding-right: 120px;
+  padding-right: 30%;
   gap: 4px;
 }
 
 .map-popup-card .move-card__prompt {
-  margin: 0;
-  line-height: 1.2;
-}
-
-.map-popup-card .move-card__prompt {
-  margin-bottom: 6px;
+  margin: 0 0 4px 0;
+  line-height: 1.15;
 }
 
 .map-popup-card .move-card {
   width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: none;
+  border: none;
 }
 
 .map-popup-card .move-card__content {
