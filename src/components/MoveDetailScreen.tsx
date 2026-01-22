@@ -50,7 +50,6 @@ export const MoveDetailScreen = ({
 
   const displayLocation = move.locationName || move.location;
   const mapsHref = move.locationUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayLocation)}`;
-  const maxSlots = Math.max(move.maxParticipants, move.attendees.length);
   const attendeeInitials = useMemo(
     () =>
       move.attendees.map((attendee) =>
@@ -64,6 +63,11 @@ export const MoveDetailScreen = ({
       ),
     [move.attendees],
   );
+  const shouldLimitAttendees = move.maxParticipants > 10;
+  const visibleAttendeeCount = shouldLimitAttendees
+    ? Math.min(10, attendeeInitials.length)
+    : attendeeInitials.length;
+  const remainingAttendeeCount = attendeeInitials.length - visibleAttendeeCount;
   const activityIcons: Record<ActivityType, ReactElement> = {
     Food: <UtensilsCrossed size={14} />,
     Study: <BookOpen size={14} />,
@@ -196,24 +200,19 @@ export const MoveDetailScreen = ({
           </div>
           {move.attendees.includes(userName) ? (
             <div className="detail__avatars">
-              {Array.from({ length: maxSlots }).map((_, index) => {
-                const initials = attendeeInitials[index];
-                return initials ? (
-                  <span
-                    key={`${initials}-${index}`}
-                    className="detail__avatar detail__avatar--filled"
-                  >
-                    {initials}
-                  </span>
-                ) : (
-                  <span key={`empty-${index}`} className="detail__avatar detail__avatar--empty">
-                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                      <circle cx="12" cy="8" r="4" fill="currentColor" />
-                      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
-                    </svg>
-                  </span>
-                );
-              })}
+              {attendeeInitials.slice(0, visibleAttendeeCount).map((initials, index) => (
+                <span
+                  key={`${initials}-${index}`}
+                  className="detail__avatar detail__avatar--filled"
+                >
+                  {initials}
+                </span>
+              ))}
+              {remainingAttendeeCount > 0 && (
+                <span className="detail__avatar detail__avatar--filled">
+                  +{remainingAttendeeCount}
+                </span>
+              )}
             </div>
           ) : (
             <p className="muted">Join to see the attendee list.</p>
