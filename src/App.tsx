@@ -88,6 +88,7 @@ const App = () => {
   const handleJoinMove = async (moveId: string) => {
     const move = moves.find((m) => m.id === moveId);
     if (!move || move.attendees.includes(user.name)) return;
+    if (new Date(move.endTime).getTime() < Date.now()) return;
     if (move.attendees.length >= move.maxParticipants) return;
 
     try {

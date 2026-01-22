@@ -25,6 +25,22 @@ type CreateMoveScreenProps = {
 };
 
 export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const getLocalTimeString = (date: Date) => date.toTimeString().slice(0, 5);
+  const toLocalDateTimeValue = (date: Date) =>
+    `${getLocalDateString(date)}T${getLocalTimeString(date)}`;
+  const getDatePart = (value: string) => value.split('T')[0] ?? '';
+  const getTimePart = (value: string) => value.split('T')[1] ?? '00:00';
+
+  const initialNow = new Date();
+  initialNow.setSeconds(0, 0);
+  const initialEnd = new Date(initialNow.getTime() + 60 * 60 * 1000);
+
   const [formState, setFormState] = useState<FormState>({
     title: '',
     description: '',
@@ -35,13 +51,17 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
     locationUrl: undefined,
     latitude: undefined,
     longitude: undefined,
-    startTime: '',
-    endTime: '',
+    startTime: toLocalDateTimeValue(initialNow),
+    endTime: toLocalDateTimeValue(initialEnd),
     maxParticipants: 1,
     area: 'North',
     activityType: 'Social',
   });
   const [formError, setFormError] = useState('');
+  const [titleWarning, setTitleWarning] = useState('');
+  const [maxParticipantsWarning, setMaxParticipantsWarning] = useState('');
+  const [startTimeWarning, setStartTimeWarning] = useState('');
+  const [endTimeWarning, setEndTimeWarning] = useState('');
   const [predictionError, setPredictionError] = useState('');
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [isFetchingPredictions, setIsFetchingPredictions] = useState(false);
@@ -51,6 +71,39 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
   const [isAreaMenuOpen, setIsAreaMenuOpen] = useState(false);
   const activityMenuRef = useRef<HTMLDivElement | null>(null);
   const areaMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const validateAndSetStartTime = (datePart: string, timePart: string) => {
+    const candidate = `${datePart}T${timePart}`;
+    const candidateTime = new Date(candidate).getTime();
+    const nowValue = new Date();
+    nowValue.setSeconds(0, 0);
+    const nowTime = nowValue.getTime();
+    if (Number.isNaN(candidateTime) || candidateTime < nowTime) {
+      const fallback = toLocalDateTimeValue(nowValue);
+      setStartTimeWarning('Start time must be in the future.');
+      setFormState((prev) => ({ ...prev, startTime: fallback }));
+      return;
+    }
+    setStartTimeWarning('');
+    setFormState((prev) => ({ ...prev, startTime: candidate }));
+  };
+
+  const validateAndSetEndTime = (datePart: string, timePart: string) => {
+    const candidate = `${datePart}T${timePart}`;
+    const candidateTime = new Date(candidate).getTime();
+    const nowValue = new Date();
+    nowValue.setSeconds(0, 0);
+    const oneHourLater = new Date(nowValue.getTime() + 60 * 60 * 1000);
+    const nowTime = nowValue.getTime();
+    if (Number.isNaN(candidateTime) || candidateTime < nowTime) {
+      const fallback = toLocalDateTimeValue(oneHourLater);
+      setEndTimeWarning('End time must be in the future.');
+      setFormState((prev) => ({ ...prev, endTime: fallback }));
+      return;
+    }
+    setEndTimeWarning('');
+    setFormState((prev) => ({ ...prev, endTime: candidate }));
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -70,8 +123,16 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
       );
       return;
     }
+    if (formState.title.length > 50) {
+      setFormError('Title must be 50 characters or fewer.');
+      return;
+    }
     if (normalizedMaxParticipants < 1) {
       setFormError('Max participants must be at least 1.');
+      return;
+    }
+    if (normalizedMaxParticipants > 50) {
+      setFormError('Max participants cannot exceed 50.');
       return;
     }
     if (formState.latitude == null || formState.longitude == null) {
@@ -84,11 +145,18 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
       setFormError('End time must be after the start time.');
       return;
     }
+    if (start < Date.now()) {
+      setFormError('Start time must be in the future.');
+      return;
+    }
     setFormError('');
     onCreateMove({
       ...formState,
       maxParticipants: normalizedMaxParticipants,
     });
+    const resetNow = new Date();
+    resetNow.setSeconds(0, 0);
+    const resetEnd = new Date(resetNow.getTime() + 60 * 60 * 1000);
     setFormState({
       title: '',
       description: '',
@@ -99,8 +167,8 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
       locationUrl: undefined,
       latitude: undefined,
       longitude: undefined,
-      startTime: '',
-      endTime: '',
+      startTime: toLocalDateTimeValue(resetNow),
+      endTime: toLocalDateTimeValue(resetEnd),
       maxParticipants: 1,
       area: 'North',
       activityType: 'Social',
@@ -220,12 +288,18 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
           <input
             type="text"
             value={formState.title}
-            onChange={(event) =>
-              setFormState((prev) => ({ ...prev, title: event.target.value }))
-            }
+            onChange={(event) => {
+              const nextTitle = event.target.value;
+              const trimmedTitle = nextTitle.slice(0, 50);
+              setFormState((prev) => ({ ...prev, title: trimmedTitle }));
+              setTitleWarning(
+                nextTitle.length > 50 ? 'Title must be 50 characters or fewer.' : '',
+              );
+            }}
             placeholder="Pickup soccer on Tech Lawn"
             required
           />
+          {titleWarning && <p className="form-error">{titleWarning}</p>}
         </label>
         <label>
           <span>Description</span>
@@ -242,6 +316,12 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
         <label>
           <span className="form-label">
             Location <span className="form-required">*</span>
+          </span>
+          <span className="form-helper">
+            <em>
+              Location must be a street address or building name; add specific details in the
+              description.
+            </em>
           </span>
           <input
             type="text"
@@ -278,14 +358,49 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
         <div className="form-row">
           <label>
             <span className="form-label">
+              Start Date <span className="form-required">*</span>
+            </span>
+            <input
+              type="date"
+              value={getDatePart(formState.startTime)}
+              onChange={(event) => {
+                const nextDate = event.target.value;
+                const timePart = getTimePart(formState.startTime);
+                validateAndSetStartTime(nextDate, timePart);
+              }}
+              required
+            />
+          </label>
+          <label>
+            <span className="form-label">
               Start Time <span className="form-required">*</span>
             </span>
             <input
-              type="datetime-local"
-              value={formState.startTime}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, startTime: event.target.value }))
-              }
+              type="time"
+              value={getTimePart(formState.startTime)}
+              onChange={(event) => {
+                const nextTime = event.target.value;
+                const datePart = getDatePart(formState.startTime);
+                validateAndSetStartTime(datePart, nextTime);
+              }}
+              required
+            />
+          </label>
+        </div>
+        {startTimeWarning && <p className="form-error">{startTimeWarning}</p>}
+        <div className="form-row">
+          <label>
+            <span className="form-label">
+              End Date <span className="form-required">*</span>
+            </span>
+            <input
+              type="date"
+              value={getDatePart(formState.endTime)}
+              onChange={(event) => {
+                const nextDate = event.target.value;
+                const timePart = getTimePart(formState.endTime);
+                validateAndSetEndTime(nextDate, timePart);
+              }}
               required
             />
           </label>
@@ -294,29 +409,42 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
               End Time <span className="form-required">*</span>
             </span>
             <input
-              type="datetime-local"
-              value={formState.endTime}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, endTime: event.target.value }))
-              }
+              type="time"
+              value={getTimePart(formState.endTime)}
+              onChange={(event) => {
+                const nextTime = event.target.value;
+                const datePart = getDatePart(formState.endTime);
+                validateAndSetEndTime(datePart, nextTime);
+              }}
               required
             />
           </label>
         </div>
+        {endTimeWarning && <p className="form-error">{endTimeWarning}</p>}
         <label>
           <span>Max Participants</span>
           <input
             type="number"
             min={1}
+            max={50}
             value={formState.maxParticipants}
             onChange={(event) => {
               const nextValue = event.target.valueAsNumber;
+              const cappedValue = Number.isNaN(nextValue) ? '' : Math.min(nextValue, 50);
+              setMaxParticipantsWarning(
+                Number.isNaN(nextValue) || nextValue <= 50
+                  ? ''
+                  : 'Max participants cannot exceed 50.',
+              );
               setFormState((prev) => ({
                 ...prev,
-                maxParticipants: Number.isNaN(nextValue) ? '' : nextValue,
+                maxParticipants: cappedValue,
               }));
             }}
           />
+          {maxParticipantsWarning && (
+            <p className="form-error">{maxParticipantsWarning}</p>
+          )}
         </label>
         <div className="form-row">
           <label>
@@ -416,20 +544,6 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
             }
             placeholder="Example: Share your phone number so we can coordinate."
           />
-          <div className="form-checkbox-row">
-            <input
-              id="signup-prompt-requires-response"
-              type="checkbox"
-              checked={formState.signupPromptRequiresResponse}
-              onChange={(event) =>
-                setFormState((prev) => ({
-                  ...prev,
-                  signupPromptRequiresResponse: event.target.checked,
-                }))
-              }
-            />
-            <span>Require a response</span>
-          </div>
         </label>
         {formError && <p className="form-error">{formError}</p>}
         <button

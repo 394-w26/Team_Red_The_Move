@@ -19,7 +19,8 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
   const displayLocation = move.locationName || move.location;
   const isFull = move.attendees.length >= move.maxParticipants;
-  const isJoinDisabled = !isJoined && isFull;
+  const isPast = statusLabel === 'Past';
+  const isJoinDisabled = !isJoined && (isFull || isPast);
   const { isSaved, toggleSave } = useSavedMoves();
   const activityIcons: Record<ActivityType, ReactElement> = {
     Food: <UtensilsCrossed size={14} />,
@@ -172,7 +173,7 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
                 aria-disabled={isJoinDisabled}
                 onClick={(event) => {
                   event.stopPropagation();
-                  if (!isFull) onJoinMove(move.id);
+                  if (!isFull && !isPast) onJoinMove(move.id);
                 }}
               >
                 Join
