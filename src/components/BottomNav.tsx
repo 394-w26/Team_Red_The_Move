@@ -1,6 +1,6 @@
 type BottomNavProps = {
-  activeTab: 'explore' | 'create' | 'profile';
-  onTabChange: (tab: 'explore' | 'create' | 'profile') => void;
+  activeTab: 'explore' | 'create';
+  onTabChange: (tab: 'explore' | 'create') => void;
 };
 
 export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
@@ -47,27 +47,6 @@ export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         <span>Create</span>
-      </button>
-      <button
-        className={`nav-item ${activeTab === 'profile' ? 'nav-item--active' : ''}`}
-        type="button"
-        aria-label="Profile"
-        onClick={() => onTabChange('profile')}
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span>My Moves</span>
       </button>
     </nav>
   );

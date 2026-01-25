@@ -14,7 +14,6 @@ import { signOut } from './utilities/auth';
 import { useAuth } from './contexts/AuthContext';
 import { ExploreScreen } from './components/ExploreScreen';
 import { CreateMoveScreen } from './components/CreateMoveScreen';
-import { MyMovesScreen } from './components/MyMovesScreen';
 import { MoveDetailScreen } from './components/MoveDetailScreen';
 import { EditMoveScreen } from './components/EditMoveScreen';
 import { LoginScreen } from './components/LoginScreen';
@@ -28,7 +27,7 @@ const defaultUser: User = {
 const App = () => {
   const { user: firebaseUser, loading } = useAuth();
   const [moves, setMoves] = useState<Move[]>([]);
-  const [activeTab, setActiveTab] = useState<'explore' | 'create' | 'profile'>('explore');
+  const [activeTab, setActiveTab] = useState<'explore' | 'create'>('explore');
   const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null);
   const [editingMoveId, setEditingMoveId] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -327,27 +326,18 @@ const App = () => {
               moves={moves}
               now={now}
               userName={user.name}
+              joinedMoves={joinedMoves}
+              hostingMoves={hostingMoves}
               onJoinMove={handleJoinMove}
               onLeaveMove={handleLeaveMove}
               onSelectMove={setSelectedMoveId}
+              onCancelMove={handleCancelMove}
+              onEditMove={setEditingMoveId}
             />
           )}
 
           {activeTab === 'create' && (
             <CreateMoveScreen onCreateMove={handleCreateMove} />
-          )}
-
-          {activeTab === 'profile' && (
-            <MyMovesScreen
-              allMoves={moves}
-              joinedMoves={joinedMoves}
-              hostingMoves={hostingMoves}
-              now={now}
-              onCancelMove={handleCancelMove}
-              onLeaveMove={handleLeaveMove}
-              onSelectMove={setSelectedMoveId}
-              onEditMove={setEditingMoveId}
-            />
           )}
         </main>
       </div>
