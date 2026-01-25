@@ -1,21 +1,56 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { Move } from '../types';
+import type { Move, ActivityType } from '../types';
 import { getDefaultCoordinatesForArea } from '../utilities/locations';
 import { MoveCard } from './MoveCard';
 
-// Fix for default marker icons in Leaflet
-const DefaultIcon = L.icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+// Helper to create category-specific markers
+const createCategoryIcon = (category: ActivityType) => {
+  const colors: Record<ActivityType, string> = {
+    Sports: '#2c1b4b', // Deep Purple (Plum)
+    Food: '#fef3c7',   // Light Gold
+    Study: '#f9c45c',  // Deep Gold
+    Social: '#e0d7ec', // Light Purple
+    Other: '#6a6279',  // Gray
+  };
 
-L.Marker.prototype.options.icon = DefaultIcon;
+  const textColors: Record<ActivityType, string> = {
+    Sports: '#fff',
+    Food: '#92400e',
+    Study: '#fff',
+    Social: '#4e2a84',
+    Other: '#fff',
+  };
+
+  const icons: Record<ActivityType, string> = {
+    Sports: '⚽',
+    Food: '🍴',
+    Study: '📚',
+    Social: '👥',
+    Other: '📍',
+  };
+
+  return L.divIcon({
+    html: `<div style="
+      background-color: ${colors[category]};
+      color: ${textColors[category]};
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    ">${icons[category]}</div>`,
+    className: 'custom-category-icon',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+};
 
 type MapViewProps = {
   moves: Move[];
@@ -56,7 +91,11 @@ export const MapView = ({
           }
 
           return (
-            <Marker key={move.id} position={[lat, lng]}>
+            <Marker 
+              key={move.id} 
+              position={[lat, lng]} 
+              icon={createCategoryIcon(move.activityType)}
+            >
               <Popup>
                 <div className="map-popup-card">
                   <MoveCard
