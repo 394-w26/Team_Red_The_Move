@@ -253,6 +253,20 @@ const App = () => {
     }
   };
 
+  const handleDeleteComment = async (moveId: string, commentId: string) => {
+    const move = moves.find((m) => m.id === moveId);
+    if (!move) return;
+
+    try {
+      const moveRef = doc(db, 'moves', moveId);
+      await updateDoc(moveRef, {
+        comments: move.comments.filter((c) => c.id !== commentId),
+      });
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -375,6 +389,7 @@ const App = () => {
           onLeaveMove={handleLeaveMove}
           onCancelMove={handleCancelMove}
           onAddComment={handleAddComment}
+          onDeleteComment={handleDeleteComment}
           onClose={() => setSelectedMoveId(null)}
         />
       )}

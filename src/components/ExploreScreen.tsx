@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Map as MapIcon, List as ListIcon } from 'lucide-react';
 import type { Move, CampusArea, ActivityType } from '../types';
 import { AREA_FILTERS } from '../types';
 import { MoveCard } from './MoveCard';
@@ -16,20 +17,17 @@ type ExploreScreenProps = {
 export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, onSelectMove }: ExploreScreenProps) => {
   const [selectedAreas, setSelectedAreas] = useState<CampusArea[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [selectedMemberRanges, setSelectedMemberRanges] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<ActivityType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'popularity'>('newest');
+  const [sortBy, setSortBy] = useState<'upcoming' | 'newest' | 'popularity'>('upcoming');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const sortRef = useRef<HTMLDivElement | null>(null);
-  const viewRef = useRef<HTMLDivElement | null>(null);
 
   const areaOptions = AREA_FILTERS.filter((area) => area !== 'All') as CampusArea[];
-  const statusOptions = ['Live Now', 'Upcoming', 'Past'] as const;
+  const statusOptions = ['Upcoming', 'Live Now', 'Past'] as const;
   const categoryOptions: ActivityType[] = ['Sports', 'Social', 'Food', 'Study'];
 
   useEffect(() => {
@@ -37,10 +35,8 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
       const target = event.target as Node;
       if (filterRef.current && filterRef.current.contains(target)) return;
       if (sortRef.current && sortRef.current.contains(target)) return;
-      if (viewRef.current && viewRef.current.contains(target)) return;
       setIsFilterOpen(false);
       setIsSortOpen(false);
-      setIsViewMenuOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -70,20 +66,6 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
       return false;
     }
 
-    // Filter by member count ranges
-    if (selectedMemberRanges.length > 0) {
-      const memberCount = move.attendees.length;
-      const matchesRange = selectedMemberRanges.some(range => {
-        if (range === '1-3') return memberCount >= 1 && memberCount <= 3;
-        if (range === '4-7') return memberCount >= 4 && memberCount <= 7;
-        if (range === '8+') return memberCount >= 8;
-        return false;
-      });
-      if (!matchesRange) {
-        return false;
-      }
-    }
-
     // Filter by search query (keyword, location)
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
@@ -92,30 +74,37 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
   });
 
   const exploreMoves = [...filteredMoves].sort((a, b) => {
+    const getStatusRank = (move: Move) => {
+      const start = new Date(move.startTime).getTime();
+      const end = new Date(move.endTime).getTime();
+      if (now >= start && now <= end) return 0; // Live Now
+      if (now < start) return 1; // Upcoming
+      return 2; // Past
+    };
+
+    if (sortBy === 'upcoming') {
+      const rankA = getStatusRank(a);
+      const rankB = getStatusRank(b);
+      if (rankA !== rankB) return rankA - rankB;
+      // If same status, upcoming/live: sort by start time (soonest first)
+      if (rankA < 2) {
+        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+      }
+      // If past: sort by start time (most recent first)
+      return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+    }
+
     if (sortBy === 'newest') {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    } else if (sortBy === 'popularity') {
-      // Sort by number of attendees (popularity)
+    }
+    
+    if (sortBy === 'popularity') {
       const attendeesDelta = b.attendees.length - a.attendees.length;
       if (attendeesDelta !== 0) return attendeesDelta;
-      // If same number of attendees, sort by newest
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
 
-    // Default sorting by status and then by creation time
-    const statusRank = (move: Move) => {
-      const status = now < new Date(move.startTime).getTime()
-        ? 'Upcoming'
-        : now <= new Date(move.endTime).getTime()
-          ? 'Live Now'
-          : 'Past';
-      if (status === 'Live Now') return 0;
-      if (status === 'Upcoming') return 1;
-      return 2;
-    };
-    const statusDelta = statusRank(a) - statusRank(b);
-    if (statusDelta !== 0) return statusDelta;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return 0;
   });
 
   return (
@@ -159,25 +148,42 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
                     checked={
                       selectedAreas.length === areaOptions.length &&
                       selectedStatuses.length === statusOptions.length &&
-                      selectedCategories.length === categoryOptions.length &&
-                      selectedMemberRanges.length === ['1-3', '4-7', '8+'].length
+                      selectedCategories.length === categoryOptions.length
                     }
                     onChange={(event) => {
                       if (event.target.checked) {
                         setSelectedAreas(areaOptions);
                         setSelectedStatuses([...statusOptions]);
                         setSelectedCategories(categoryOptions);
-                        setSelectedMemberRanges(['1-3', '4-7', '8+']);
                       } else {
                         setSelectedAreas([]);
                         setSelectedStatuses([]);
                         setSelectedCategories([]);
-                        setSelectedMemberRanges([]);
                       }
                     }}
                   />
                   <span>All</span>
                 </label>
+              </div>
+
+              <div className="filter-section">
+                <h4>Status</h4>
+                {statusOptions.map((status) => (
+                  <label key={status} className="filter-option">
+                    <input
+                      type="checkbox"
+                      checked={selectedStatuses.includes(status)}
+                      onChange={(event) => {
+                        if (event.target.checked) {
+                          setSelectedStatuses((prev) => [...prev, status]);
+                        } else {
+                          setSelectedStatuses((prev) => prev.filter((item) => item !== status));
+                        }
+                      }}
+                    />
+                    <span>{status}</span>
+                  </label>
+                ))}
               </div>
 
               <div className="filter-section">
@@ -219,46 +225,6 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
                   </label>
                 ))}
               </div>
-
-              <div className="filter-section">
-                <h4>Status</h4>
-                {statusOptions.map((status) => (
-                  <label key={status} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedStatuses.includes(status)}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          setSelectedStatuses((prev) => [...prev, status]);
-                        } else {
-                          setSelectedStatuses((prev) => prev.filter((item) => item !== status));
-                        }
-                      }}
-                    />
-                    <span>{status}</span>
-                  </label>
-                ))}
-              </div>
-
-              <div className="filter-section">
-                <h4>Group Size</h4>
-                {['1-3', '4-7', '8+'].map((range) => (
-                  <label key={range} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedMemberRanges.includes(range)}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          setSelectedMemberRanges((prev) => [...prev, range]);
-                        } else {
-                          setSelectedMemberRanges((prev) => prev.filter((item) => item !== range));
-                        }
-                      }}
-                    />
-                    <span>{range} members</span>
-                  </label>
-                ))}
-              </div>
             </div>
           )}
         </div>
@@ -270,12 +236,27 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
             onClick={() => setIsSortOpen(!isSortOpen)}
             aria-label="Sort moves"
           >
-            <i className="fa-solid fa-sort"></i>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m21 16-4 4-4-4" />
+              <path d="M17 20V4" />
+              <path d="m3 8 4-4 4 4" />
+              <path d="M7 4v16" />
+            </svg>
           </button>
           {isSortOpen && (
             <div className="filter-menu sort-menu">
               {[
-                { value: 'newest', label: 'Newest first' },
+                { value: 'upcoming', label: 'Upcoming' },
+                { value: 'newest', label: 'Newest Post' },
                 { value: 'popularity', label: 'Most popular' },
               ].map((option) => (
                 <button
@@ -283,7 +264,7 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
                   type="button"
                   className={`view-option ${sortBy === option.value ? 'view-option--active' : ''}`}
                   onClick={() => {
-                    setSortBy(option.value as 'newest' | 'popularity');
+                    setSortBy(option.value as 'upcoming' | 'newest' | 'popularity');
                     setIsSortOpen(false);
                   }}
                 >
@@ -294,40 +275,15 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
           )}
         </div>
 
-        <div className="view-dropdown" ref={viewRef}>
-          <button
-            type="button"
-            className="filter-button"
-            onClick={() => setIsViewMenuOpen((prev) => !prev)}
-            aria-label="Choose view mode"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-          {isViewMenuOpen && (
-            <div className="filter-menu view-menu">
-              {[
-                { value: 'list', label: 'List view' },
-                { value: 'map', label: 'Map view' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={`view-option ${viewMode === option.value ? 'view-option--active' : ''}`}
-                  onClick={() => {
-                    setViewMode(option.value as 'list' | 'map');
-                    setIsViewMenuOpen(false);
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          type="button"
+          className="filter-button"
+          onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+          aria-label={viewMode === 'list' ? 'Switch to map view' : 'Switch to list view'}
+          style={{ background: 'var(--purple)', color: '#fff' }}
+        >
+          {viewMode === 'list' ? <MapIcon size={20} /> : <ListIcon size={20} />}
+        </button>
       </section>
 
       <section aria-live="polite" className="move-list">

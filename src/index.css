@@ -1184,27 +1184,60 @@ img {
 
 .detail__comments {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
-.detail__comments-header {
+.detail__comment-input-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  background: #f8f9fa;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 4px 4px 16px;
+  transition: all 0.2s ease;
 }
 
-.detail__comment-toggle {
+.detail__comment-input-container:focus-within {
+  border-color: var(--purple);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(78, 42, 132, 0.08);
+}
+
+.detail__comment-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+}
+
+.detail__comment-input::placeholder {
+  color: #b7afc6;
+}
+
+.detail__comment-send {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #fff;
-  display: inline-flex;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--plum);
-  box-shadow: 0 10px 24px rgba(31, 26, 43, 0.08);
-  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.detail__comment-send:disabled {
+  background: #d6cfdf;
+  cursor: not-allowed;
+}
+
+.detail__comment-send:not(:disabled):hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(78, 42, 132, 0.2);
 }
 
 .detail__comments h3 {
@@ -1213,10 +1246,6 @@ img {
 
 .detail__attendees h3 {
   margin: 0;
-}
-
-.detail__comment-toggle:hover {
-  background: var(--sky);
 }
 
 .comments {
@@ -1239,18 +1268,31 @@ img {
   margin-bottom: 6px;
 }
 
-.comment-form {
+.comment__body {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
 }
 
-.comment-form input {
+.comment__body p {
+  margin: 0;
   flex: 1;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  padding: 10px 20px;
+}
+
+.comment__delete {
+  color: var(--muted);
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment__delete:hover {
+  color: #b42318;
+  background: rgba(180, 35, 24, 0.08);
 }
 
 .muted {
@@ -1436,6 +1478,12 @@ img {
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(31, 26, 43, 0.12);
   margin-bottom: 20px;
+}
+
+.view-toggle--active {
+  background: var(--purple) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(78, 42, 132, 0.4);
 }
 
 /* Leaflet popup customization */
