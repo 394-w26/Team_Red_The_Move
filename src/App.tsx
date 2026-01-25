@@ -28,7 +28,8 @@ const defaultUser: User = {
 const App = () => {
   const { user: firebaseUser, loading } = useAuth();
   const [moves, setMoves] = useState<Move[]>([]);
-  const [activeTab, setActiveTab] = useState<'explore' | 'create' | 'profile'>('explore');
+  const [activeTab, setActiveTab] = useState<'explore' | 'profile'>('explore');
+  const [isCreating, setIsCreating] = useState(false);
   const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null);
   const [editingMoveId, setEditingMoveId] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -225,6 +226,7 @@ const App = () => {
         maxParticipants: normalizedMaxParticipants,
         comments: [],
       });
+      setIsCreating(false);
       setActiveTab('explore');
     } catch (error) {
       console.error('Error creating move:', error);
@@ -309,18 +311,37 @@ const App = () => {
 
         <main className="app-main">
           {activeTab === 'explore' && (
-            <ExploreScreen
-              moves={moves}
-              now={now}
-              userName={user.name}
-              onJoinMove={handleJoinMove}
-              onLeaveMove={handleLeaveMove}
-              onSelectMove={setSelectedMoveId}
-            />
-          )}
-
-          {activeTab === 'create' && (
-            <CreateMoveScreen onCreateMove={handleCreateMove} />
+            <>
+              <ExploreScreen
+                moves={moves}
+                now={now}
+                userName={user.name}
+                onJoinMove={handleJoinMove}
+                onLeaveMove={handleLeaveMove}
+                onSelectMove={setSelectedMoveId}
+              />
+              <button
+                type="button"
+                className="fab"
+                aria-label="Create Move"
+                onClick={() => setIsCreating(true)}
+                title="Create a new move"
+              >
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </>
           )}
 
           {activeTab === 'profile' && (
@@ -339,6 +360,10 @@ const App = () => {
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {isCreating && (
+        <CreateMoveScreen onCreateMove={handleCreateMove} onClose={() => setIsCreating(false)} />
+      )}
 
       {selectedMove && (
         <MoveDetailScreen

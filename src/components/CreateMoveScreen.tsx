@@ -22,9 +22,10 @@ type FormState = {
 
 type CreateMoveScreenProps = {
   onCreateMove: (formData: FormState) => void;
+  onClose?: () => void;
 };
 
-export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
+export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProps) => {
   const getLocalDateString = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -154,6 +155,7 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
       ...formState,
       maxParticipants: normalizedMaxParticipants,
     });
+    onClose?.();
     const resetNow = new Date();
     resetNow.setSeconds(0, 0);
     const resetEnd = new Date(resetNow.getTime() + 60 * 60 * 1000);
@@ -275,12 +277,26 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
   };
 
   return (
-    <section className="create-panel">
-      <div className="panel-heading">
-        <h2>Create a Move</h2>
-        <p>Share a quick plan and publish it instantly.</p>
-      </div>
-      <form className="form" onSubmit={handleSubmit}>
+    <div className="create-overlay">
+      <section className="create-panel">
+        <div className="panel-heading">
+          <div>
+            <h2>Create a Move</h2>
+            <p>Share a quick plan and publish it instantly.</p>
+          </div>
+          {onClose && (
+            <button
+              type="button"
+              className="panel-close"
+              onClick={onClose}
+              aria-label="Close"
+              title="Close"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        <form className="form" onSubmit={handleSubmit}>
         <label>
           <span className="form-label">
             Title <span className="form-required">*</span>
@@ -546,14 +562,26 @@ export const CreateMoveScreen = ({ onCreateMove }: CreateMoveScreenProps) => {
           />
         </label>
         {formError && <p className="form-error">{formError}</p>}
-        <button
-          className={`btn btn--primary${isFormComplete ? '' : ' btn--disabled'}`}
-          type="submit"
-          disabled={!isFormComplete}
-        >
-          Post Move
-        </button>
+        <div className="form-actions">
+          <button
+            className={`btn btn--primary${isFormComplete ? '' : ' btn--disabled'}`}
+            type="submit"
+            disabled={!isFormComplete}
+          >
+            Post Move
+          </button>
+          {onClose && (
+            <button
+              className="btn btn--ghost"
+              type="button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
-    </section>
+      </section>
+    </div>
   );
 };
