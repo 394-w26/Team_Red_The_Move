@@ -222,28 +222,32 @@ export const MoveDetailScreen = ({
         </div>
 
         <div className="detail__comments">
-          <div className="detail__comment-input-container">
-            <input
-              type="text"
-              className="detail__comment-input"
-              placeholder="Comment here..."
-              value={commentDraft}
-              onChange={(event) => setCommentDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  handleAddComment();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="detail__comment-send"
-              onClick={handleAddComment}
-              disabled={!commentDraft.trim()}
-            >
-              <Plus size={20} />
-            </button>
-          </div>
+          {move.attendees.includes(userName) ? (
+            <div className="detail__comment-input-container">
+              <input
+                type="text"
+                className="detail__comment-input"
+                placeholder="Comment here..."
+                value={commentDraft}
+                onChange={(event) => setCommentDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    handleAddComment();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="detail__comment-send"
+                onClick={handleAddComment}
+                disabled={!commentDraft.trim()}
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+          ) : (
+            <p className="muted">Join to add a comment.</p>
+          )}
           <div className="comments">
             {move.comments.length === 0 ? (
               <p className="muted">No comments yet. Start the plan.</p>
