@@ -19,7 +19,7 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
   const displayLocation = move.locationName || move.location;
   const isFull = move.attendees.length >= move.maxParticipants;
-  const isPast = statusLabel === 'Past';
+  const isPast = new Date(move.endTime).getTime() < now;
   const isJoinDisabled = !isJoined && (isFull || isPast);
   const { isSaved, toggleSave } = useSavedMoves();
   const activityIcons: Record<ActivityType, ReactElement> = {
