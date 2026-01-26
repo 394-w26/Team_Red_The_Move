@@ -1030,6 +1030,28 @@ img {
   color: var(--plum);
 }
 
+.my-upcoming-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.my-upcoming-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.my-upcoming-arrow {
+  font-style: italic;
+  font-weight: 700;
+}
+
 .pill-count {
   min-width: 32px;
   padding: 6px 10px;
