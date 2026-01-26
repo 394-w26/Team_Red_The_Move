@@ -52,6 +52,7 @@ export const MoveDetailScreen = ({
 
   const displayLocation = move.locationName || move.location;
   const mapsHref = move.locationUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayLocation)}`;
+  const isPast = new Date(move.endTime).getTime() < now;
   const attendeeInitials = useMemo(
     () =>
       move.attendees.map((attendee) =>
@@ -146,7 +147,11 @@ export const MoveDetailScreen = ({
                   className="btn btn--primary"
                   type="button"
                   aria-label={`Join ${move.title}`}
-                  onClick={() => onJoinMove(move.id)}
+                  onClick={() => {
+                    if (!isPast) onJoinMove(move.id);
+                  }}
+                  disabled={isPast}
+                  aria-disabled={isPast}
                 >
                   Join
                 </button>
