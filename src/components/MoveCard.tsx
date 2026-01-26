@@ -1,5 +1,5 @@
 import type { Move, ActivityType, CampusArea } from '../types';
-import { formatTimeAgo, getStatusLabel } from '../utilities/helpers';
+import { getStatusLabel } from '../utilities/helpers';
 import { BookOpen, CalendarClock, MapPin, Star, UserRound, Users, UtensilsCrossed } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useSavedMoves } from '../contexts/SavedMovesContext';
@@ -19,7 +19,7 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
   const displayLocation = move.locationName || move.location;
   const isFull = move.attendees.length >= move.maxParticipants;
-  const isPast = statusLabel === 'Past';
+  const isPast = new Date(move.endTime).getTime() < now;
   const isJoinDisabled = !isJoined && (isFull || isPast);
   const { isSaved, toggleSave } = useSavedMoves();
   const activityIcons: Record<ActivityType, ReactElement> = {
@@ -115,9 +115,14 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
             <span
               className={`status-badge ${statusLabel === 'Past' ? 'status-badge--past' : ''}`}
             >
+              <span
+                className={`status-dot status-dot--${statusLabel
+                  .toLowerCase()
+                  .replace(' ', '-')}`}
+                aria-hidden="true"
+              />
               {statusLabel}
             </span>
-            <span className="move-card__time">{formatTimeAgo(move.createdAt, now)}</span>
           </div>
           <div className="move-card__actions move-card__actions--right">
             <span className="attendee-count attendee-count--with-icon">
