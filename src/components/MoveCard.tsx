@@ -140,6 +140,12 @@ export const MoveCard = ({
             <span
               className={`status-badge ${statusLabel === 'Past' ? 'status-badge--past' : ''}`}
             >
+              <span
+                className={`status-dot status-dot--${statusLabel
+                  .toLowerCase()
+                  .replace(' ', '-')}`}
+                aria-hidden="true"
+              />
               {statusLabel}
             </span>
           </div>
