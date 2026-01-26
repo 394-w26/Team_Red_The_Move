@@ -8,7 +8,6 @@ import {
   MapPin,
   Plus,
   Star,
-  Trash2,
   UserRound,
   Users,
   UtensilsCrossed,
@@ -24,7 +23,6 @@ type MoveDetailScreenProps = {
   onLeaveMove: (moveId: string) => void;
   onCancelMove: (moveId: string) => void;
   onAddComment: (moveId: string, text: string) => void;
-  onDeleteComment: (moveId: string, commentId: string) => void;
   onClose: () => void;
 };
 
@@ -37,10 +35,10 @@ export const MoveDetailScreen = ({
   onLeaveMove,
   onCancelMove,
   onAddComment,
-  onDeleteComment,
   onClose,
 }: MoveDetailScreenProps) => {
   const [commentDraft, setCommentDraft] = useState('');
+  const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const { isSaved, toggleSave } = useSavedMoves();
 
   const handleAddComment = () => {
@@ -222,28 +220,33 @@ export const MoveDetailScreen = ({
         </div>
 
         <div className="detail__comments">
-          <div className="detail__comment-input-container">
-            <input
-              type="text"
-              className="detail__comment-input"
-              placeholder="Comment here..."
-              value={commentDraft}
-              onChange={(event) => setCommentDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  handleAddComment();
-                }
-              }}
-            />
+          <div className="detail__comments-header">
+            <h3>Comments</h3>
             <button
               type="button"
-              className="detail__comment-send"
-              onClick={handleAddComment}
-              disabled={!commentDraft.trim()}
+              className="detail__comment-toggle"
+              aria-label={isCommentFormOpen ? 'Close comment form' : 'Add a comment'}
+              onClick={() => setIsCommentFormOpen((prev) => !prev)}
             >
-              <Plus size={20} />
+              <Plus size={18} />
             </button>
           </div>
+          {isCommentFormOpen && (
+            <div className="comment-form">
+              <label>
+                <span className="sr-only">Add a comment</span>
+                <input
+                  type="text"
+                  placeholder="Coordinate details here"
+                  value={commentDraft}
+                  onChange={(event) => setCommentDraft(event.target.value)}
+                />
+              </label>
+              <button className="btn btn--primary" type="button" onClick={handleAddComment}>
+                Send
+              </button>
+            </div>
+          )}
           <div className="comments">
             {move.comments.length === 0 ? (
               <p className="muted">No comments yet. Start the plan.</p>
@@ -254,23 +257,7 @@ export const MoveDetailScreen = ({
                     <strong>{comment.author}</strong>
                     <span>{formatTimeAgo(comment.createdAt, now)}</span>
                   </div>
-                  <div className="comment__body">
-                    <p>{comment.text}</p>
-                    {comment.author === userName && (
-                      <button
-                        type="button"
-                        className="comment__delete"
-                        aria-label="Delete comment"
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this comment?')) {
-                            onDeleteComment(move.id, comment.id);
-                          }
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
+                  <p>{comment.text}</p>
                 </div>
               ))
             )}
