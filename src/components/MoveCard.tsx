@@ -162,9 +162,13 @@ export const MoveCard = ({
               type="button"
               aria-label={`${isSaved(move.id) ? 'Unsave' : 'Save'} ${move.title}`}
               aria-pressed={isSaved(move.id)}
+              disabled={isPast}
+              aria-disabled={isPast}
               onClick={(event) => {
                 event.stopPropagation();
-                void toggleSave(move.id);
+                if (!isPast) {
+                  void toggleSave(move.id);
+                }
               }}
             >
               <Star

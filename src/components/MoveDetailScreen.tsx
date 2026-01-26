@@ -119,7 +119,13 @@ export const MoveDetailScreen = ({
               type="button"
               aria-label={`${isSaved(move.id) ? 'Unsave' : 'Save'} ${move.title}`}
               aria-pressed={isSaved(move.id)}
-              onClick={() => void toggleSave(move.id)}
+              disabled={isPast}
+              aria-disabled={isPast}
+              onClick={() => {
+                if (!isPast) {
+                  void toggleSave(move.id);
+                }
+              }}
             >
               <Star size={16} strokeWidth={2} fill={isSaved(move.id) ? 'currentColor' : 'none'} />
             </button>
