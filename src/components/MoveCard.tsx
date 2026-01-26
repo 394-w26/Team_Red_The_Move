@@ -115,6 +115,12 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
             <span
               className={`status-badge ${statusLabel === 'Past' ? 'status-badge--past' : ''}`}
             >
+              <span
+                className={`status-dot status-dot--${statusLabel
+                  .toLowerCase()
+                  .replace(' ', '-')}`}
+                aria-hidden="true"
+              />
               {statusLabel}
             </span>
           </div>
