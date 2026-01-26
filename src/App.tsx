@@ -34,9 +34,9 @@ const App = () => {
   // Convert Firebase user to app user
   const user: User = firebaseUser
     ? {
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-      }
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+    }
     : defaultUser;
 
   // Listen to Firestore moves collection in real-time
@@ -300,7 +300,7 @@ const App = () => {
 
   // Show login screen if not authenticated
   if (!firebaseUser) {
-    return <LoginScreen onSignIn={() => {}} />;
+    return <LoginScreen onSignIn={() => { }} />;
   }
 
   return (
@@ -361,11 +361,11 @@ const App = () => {
       </button>
 
       {isCreateOpen && (
-        <CreateMoveScreen 
+        <CreateMoveScreen
           onCreateMove={(move) => {
             handleCreateMove(move);
             setIsCreateOpen(false);
-          }} 
+          }}
           onClose={() => setIsCreateOpen(false)}
         />
       )}

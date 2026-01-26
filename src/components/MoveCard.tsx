@@ -30,7 +30,9 @@ export const MoveCard = ({
   const isJoined = move.attendees.includes(userName);
   const isHost = move.hostName === userName;
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
-  const displayLocation = move.locationName || move.location;
+  const fullLocation = move.locationName || move.location;
+  // Truncate location to the first part (before the first comma) for the card view
+  const displayLocation = fullLocation.split(',')[0];
   const isFull = move.attendees.length >= move.maxParticipants;
   const isPast = statusLabel === 'Past';
   const isJoinDisabled = !isJoined && (isFull || isPast);

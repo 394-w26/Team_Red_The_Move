@@ -275,7 +275,10 @@ export const ExploreScreen = ({
                 <button
                   type="button"
                   className="filter-button"
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  onClick={() => {
+                    setIsFilterOpen(!isFilterOpen);
+                    setIsSortOpen(false);
+                  }}
                   aria-label="Filter moves"
                 >
                   <svg
@@ -385,7 +388,10 @@ export const ExploreScreen = ({
           <button
             type="button"
             className="filter-button"
-            onClick={() => setIsSortOpen(!isSortOpen)}
+            onClick={() => {
+              setIsSortOpen(!isSortOpen);
+              setIsFilterOpen(false);
+            }}
             aria-label="Sort moves"
           >
             <svg
@@ -448,14 +454,9 @@ export const ExploreScreen = ({
               onClick={() => setShowMyUpcoming((prev) => !prev)}
             >
               <span className="my-upcoming-text">
-                You have joined or are hosting <span className="my-upcoming-count">{myActiveMovesCount}</span> {myActiveMovesCount === 1 ? 'Move' : 'Moves'} that {myActiveMovesCount === 1 ? 'is' : 'are'} live now or upcoming.
+                You have <span className="my-upcoming-count">{myActiveMovesCount}</span> {myActiveMovesCount === 1 ? 'Move' : 'Moves'} live now or upcoming.
               </span>
               <span className="my-upcoming-action">
-                <span className="my-upcoming-view">
-                  <strong>
-                    <em>View</em>
-                  </strong>
-                </span>
                 <svg
                   width="16"
                   height="16"
@@ -472,40 +473,21 @@ export const ExploreScreen = ({
             </button>
             {showMyUpcoming && (
               <div className="my-upcoming-list">
-                {joinedActiveMoves.length > 0 && (
-                  <div className="my-upcoming-section">
-                    <h4>Joined</h4>
-                    {joinedActiveMoves.map((move) => (
-                      <MoveCard
-                        key={move.id}
-                        move={move}
-                        now={now}
-                        userName={userName}
-                        onJoinMove={onJoinMove}
-                        onLeaveMove={onLeaveMove}
-                        onSelectMove={onSelectMove}
-                        userLocation={userLocation}
-                      />
-                    ))}
-                  </div>
-                )}
-                {hostingActiveMoves.length > 0 && (
-                  <div className="my-upcoming-section">
-                    <h4>Hosting</h4>
-                    {hostingActiveMoves.map((move) => (
-                      <MoveCard
-                        key={move.id}
-                        move={move}
-                        now={now}
-                        userName={userName}
-                        onJoinMove={onJoinMove}
-                        onLeaveMove={onLeaveMove}
-                        onSelectMove={onSelectMove}
-                        userLocation={userLocation}
-                      />
-                    ))}
-                  </div>
-                )}
+                {/* Combined list of active moves (joined + hosting), sorted by start time */}
+                {[...joinedActiveMoves, ...hostingActiveMoves]
+                  .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                  .map((move) => (
+                    <MoveCard
+                      key={move.id}
+                      move={move}
+                      now={now}
+                      userName={userName}
+                      onJoinMove={onJoinMove}
+                      onLeaveMove={onLeaveMove}
+                      onSelectMove={onSelectMove}
+                      userLocation={userLocation}
+                    />
+                  ))}
               </div>
             )}
           </div>

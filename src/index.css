@@ -188,7 +188,7 @@ img {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 24px 0 16px;
+  margin: 16px 0 12px;
 }
 
 .explore-filters {
@@ -288,8 +288,10 @@ img {
   border-radius: 12px;
   padding: 12px;
   min-width: 200px;
+  max-width: calc(100vw - 32px); /* Prevent overflow on small screens */
   box-shadow: var(--shadow);
   z-index: 1000;
+  box-sizing: border-box;
 }
 
 .filter-section {
@@ -939,30 +941,36 @@ img {
 /* Tab Navigation */
 .my-moves-tabs {
   display: flex;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  padding: 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(31, 26, 43, 0.08);
   position: sticky;
   top: 0;
   z-index: 10;
+  align-items: center;
 }
 
 .my-moves-tab {
   flex: 1;
-  padding: 12px 20px;
-  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  border-radius: 12px;
   background: transparent;
   color: var(--muted);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   border: none;
   cursor: pointer;
   position: relative;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .my-moves-tab:hover {
@@ -1032,12 +1040,35 @@ img {
 
 .my-upcoming-toggle {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   width: 100%;
   text-align: left;
+  background: linear-gradient(140deg, rgba(78, 42, 132, 0.1), rgba(249, 196, 92, 0.2));
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.my-upcoming-text {
+  font-size: 0.95rem;
+  color: var(--plum);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.my-upcoming-count {
+  color: #880e4f;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin: 0 2px;
 }
 
 .my-upcoming-action {
@@ -1045,6 +1076,8 @@ img {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  color: var(--plum);
+  flex-shrink: 0;
 }
 
 .my-upcoming-arrow {
@@ -1085,7 +1118,10 @@ img {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 16px;
   padding: 12px 16px;
   display: flex;
@@ -1962,13 +1998,19 @@ img {
     font-size: 0.9rem;
   }
 
+  .explore-tools {
+    margin: 0 0 8px;
+    gap: 8px;
+  }
+
   .app-main {
-    padding: 16px;
+    padding: 0 20px 20px;
   }
 
   .screen {
     width: 100%;
     max-width: 100%;
+    padding: 24px 0 80px;
   }
 
   /* Tab Navigation */
@@ -2146,7 +2188,7 @@ img {
 
 @media (max-width: 480px) {
   .app-header {
-    padding: 12px 16px;
+    padding: 16px;
   }
 
   .app-header h1 {
@@ -2158,7 +2200,7 @@ img {
   }
 
   .app-main {
-    padding: 12px;
+    padding: 0 16px 16px;
   }
 
   /* Tabs - make them stack on very small screens */
