@@ -1417,12 +1417,15 @@ img {
   display: block;
   box-sizing: border-box;
   border: none;
-  width: fit-content;
+  width: auto !important;
+  min-width: 280px;
+  max-width: 400px;
 }
 
 .leaflet-popup-content {
   margin: 0 !important;
-  width: 100% !important;
+  width: auto !important;
+  min-width: 280px;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -1439,14 +1442,16 @@ img {
 }
 
 .map-popup-card {
-  width: 92vw;
-  max-width: 520px;
+  width: 100%;
+  min-width: 280px;
+  max-width: 380px;
   margin: 0 auto;
 }
 
 .map-popup-card .move-card__body--stack {
-  padding-right: 30%;
+  padding-right: 0;
   gap: 4px;
+  width: 100%;
 }
 
 .map-popup-card .move-card__prompt {
@@ -1466,10 +1471,38 @@ img {
   padding: 14px 14px 12px;
 }
 
+.map-popup-card .move-card__content--horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: static;
+}
+
 .map-popup-card .move-card__right {
-  right: 14px;
-  top: 14px;
-  bottom: 12px;
+  position: static;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.map-popup-card .move-card__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-popup-card .move-card__actions--right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.map-popup-card .move-card__meta-row {
+  flex-wrap: wrap;
+  word-break: break-word;
 }
 
 .popup-content {
@@ -1568,4 +1601,69 @@ img {
   .map-container {
     height: 400px;
   }
+}
+
+/* Location prompt banner styles */
+.location-prompt {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 16px 20px;
+  margin: 0 -20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+}
+
+.location-prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.location-prompt-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.location-prompt-text p {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+}
+
+.error-text {
+  color: #fecaca !important;
+  font-size: 0.85rem !important;
+}
+
+.location-prompt-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* User location marker animation */
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+.user-location-icon {
+  z-index: 1000 !important;
+}
+
+/* Distance info in move card */
+.move-card__distance {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-left: 8px;
 }

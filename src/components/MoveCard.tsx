@@ -11,9 +11,10 @@ type MoveCardProps = {
   onJoinMove: (moveId: string) => void;
   onLeaveMove: (moveId: string) => void;
   onSelectMove: (moveId: string) => void;
+  distance?: string | null; // Optional distance to display
 };
 
-export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelectMove }: MoveCardProps) => {
+export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelectMove, distance }: MoveCardProps) => {
   const isJoined = move.attendees.includes(userName);
   const isHost = move.hostName === userName;
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
@@ -103,6 +104,9 @@ export const MoveCard = ({ move, now, userName, onJoinMove, onLeaveMove, onSelec
             <div className="move-card__meta-row">
               <MapPin size={14} className="move-card__meta-icon" />
               <span>{displayLocation}</span>
+              {distance && (
+                <span className="move-card__distance">• {distance} away</span>
+              )}
             </div>
             <div className="move-card__meta-row">
               <UserRound size={14} className="move-card__meta-icon" />

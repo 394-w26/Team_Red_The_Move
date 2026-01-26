@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Move, ActivityType } from '../types';
 import { getDefaultCoordinatesForArea } from '../utilities/locations';
-import { MoveCard } from './MoveCard';
+import { MapMoveCard } from './MapMoveCard';
 
 // Helper to create category-specific markers
 const createCategoryIcon = (category: ActivityType) => {
@@ -52,6 +52,36 @@ const createCategoryIcon = (category: ActivityType) => {
   });
 };
 
+// Helper to create user location marker
+const createUserLocationIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #3b82f6;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      position: relative;
+    ">
+      <div style="
+        background-color: #3b82f6;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: pulse 2s infinite;
+      "></div>
+    </div>`,
+    className: 'user-location-icon',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+};
+
 type MapViewProps = {
   moves: Move[];
   now: number;
@@ -59,6 +89,7 @@ type MapViewProps = {
   onJoinMove: (moveId: string) => void;
   onLeaveMove: (moveId: string) => void;
   onSelectMove: (moveId: string) => void;
+  userLocation?: { latitude: number; longitude: number } | null;
 };
 
 export const MapView = ({
@@ -68,6 +99,7 @@ export const MapView = ({
   onJoinMove,
   onLeaveMove,
   onSelectMove,
+  userLocation,
 }: MapViewProps) => {
   // Northwestern campus center coordinates
   const mapCenter = [42.0500, -87.6750] as [number, number];
@@ -97,20 +129,33 @@ export const MapView = ({
               icon={createCategoryIcon(move.activityType)}
             >
               <Popup>
-                <div className="map-popup-card">
-                  <MoveCard
-                    move={move}
-                    now={now}
-                    userName={userName}
-                    onJoinMove={onJoinMove}
-                    onLeaveMove={onLeaveMove}
-                    onSelectMove={onSelectMove}
-                  />
-                </div>
+                <MapMoveCard
+                  move={move}
+                  now={now}
+                  userName={userName}
+                  onJoinMove={onJoinMove}
+                  onLeaveMove={onLeaveMove}
+                  onSelectMove={onSelectMove}
+                  userLocation={userLocation}
+                />
               </Popup>
             </Marker>
           );
         })}
+
+        {/* User location marker */}
+        {userLocation && (
+          <Marker
+            position={[userLocation.latitude, userLocation.longitude]}
+            icon={createUserLocationIcon()}
+          >
+            <Popup>
+              <div style={{ textAlign: 'center', padding: '8px' }}>
+                <strong>Your Location</strong>
+              </div>
+            </Popup>
+          </Marker>
+        )}
       </MapContainer>
     </div>
   );

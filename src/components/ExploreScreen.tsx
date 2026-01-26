@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Map as MapIcon, List as ListIcon } from 'lucide-react';
+import { Map as MapIcon, List as ListIcon, MapPin } from 'lucide-react';
 import type { Move, CampusArea, ActivityType } from '../types';
 import { AREA_FILTERS } from '../types';
 import { MoveCard } from './MoveCard';
 import { MapView } from './MapView';
+import { useLocation } from '../contexts/LocationContext';
 
 type ExploreScreenProps = {
   moves: Move[];
@@ -23,8 +24,11 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'upcoming' | 'newest' | 'popularity'>('upcoming');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const filterRef = useRef<HTMLDivElement | null>(null);
   const sortRef = useRef<HTMLDivElement | null>(null);
+
+  const { userLocation, locationError, isLocationLoading, requestLocation, hasLocationPermission } = useLocation();
 
   const areaOptions = AREA_FILTERS.filter((area) => area !== 'All') as CampusArea[];
   const statusOptions = ['Upcoming', 'Live Now', 'Past'] as const;
@@ -42,6 +46,15 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Show location prompt when switching to map view without permission
+  useEffect(() => {
+    if (viewMode === 'map' && !hasLocationPermission && !userLocation) {
+      setShowLocationPrompt(true);
+    } else {
+      setShowLocationPrompt(false);
+    }
+  }, [viewMode, hasLocationPermission, userLocation]);
 
   const filteredMoves = moves.filter((move) => {
     // Filter by selected campus areas
@@ -109,6 +122,40 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
 
   return (
     <>
+      {showLocationPrompt && (
+        <div className="location-prompt">
+          <div className="location-prompt-content">
+            <MapPin size={20} />
+            <div className="location-prompt-text">
+              <p>
+                <strong>Enable location services</strong> to see your position on the map and find moves near you.
+              </p>
+              {locationError && <p className="error-text">{locationError}</p>}
+            </div>
+            <div className="location-prompt-actions">
+              <button
+                type="button"
+                className="btn btn--small btn--primary"
+                onClick={() => {
+                  requestLocation();
+                  setShowLocationPrompt(false);
+                }}
+                disabled={isLocationLoading}
+              >
+                {isLocationLoading ? 'Getting location...' : 'Enable Location'}
+              </button>
+              <button
+                type="button"
+                className="btn btn--small btn--ghost"
+                onClick={() => setShowLocationPrompt(false)}
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="explore-tools">
         <label className="search">
           <span className="sr-only">Search moves</span>
@@ -320,6 +367,7 @@ export const ExploreScreen = ({ moves, now, userName, onJoinMove, onLeaveMove, o
               onJoinMove={onJoinMove}
               onLeaveMove={onLeaveMove}
               onSelectMove={onSelectMove}
+              userLocation={userLocation}
             />
           )
         )}
