@@ -6,7 +6,8 @@ import { MoveCard } from './MoveCard';
 import { MapView } from './MapView';
 import { useSavedMoves } from '../contexts/SavedMovesContext';
 import { useLocation } from '../contexts/LocationContext';
-import { formatTimeAgo, formatEventTime, getStatusLabel } from '../utilities/helpers';
+import { formatTimeAgo, formatEventTime, getStatusLabel, calculateDistance, formatDistance } from '../utilities/helpers';
+import { getDefaultCoordinatesForArea } from '../utilities/locations';
 
 type ExploreScreenProps = {
   moves: Move[];
@@ -45,7 +46,7 @@ export const ExploreScreen = ({
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   
   const { unsaveMove, isSaved } = useSavedMoves();
-  const { userLocation, locationError, isLocationLoading, requestLocation, hasLocationPermission } = useLocation();
+  const { userLocation, locationError, isLocationLoading, requestLocation } = useLocation();
   
   const filterRef = useRef<HTMLDivElement | null>(null);
   const sortRef = useRef<HTMLDivElement | null>(null);
@@ -53,6 +54,28 @@ export const ExploreScreen = ({
   const areaOptions = AREA_FILTERS.filter((area) => area !== 'All') as CampusArea[];
   const statusOptions = ['Upcoming', 'Live Now', 'Past'] as const;
   const categoryOptions: ActivityType[] = ['Sports', 'Social', 'Food', 'Study'];
+
+  const getDistanceText = (move: Move) => {
+    if (!userLocation) return null;
+    
+    let lat = move.latitude;
+    let lng = move.longitude;
+    
+    if (lat === undefined || lng === undefined) {
+      const defaultCoords = getDefaultCoordinatesForArea(move.area);
+      lat = defaultCoords.latitude;
+      lng = defaultCoords.longitude;
+    }
+    
+    const dist = calculateDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      lat,
+      lng
+    );
+    
+    return formatDistance(dist);
+  };
 
   // Filter all moves to get only saved ones from the full collection
   const savedMoves = moves.filter((move) => isSaved(move.id));
@@ -72,12 +95,12 @@ export const ExploreScreen = ({
 
   // Show location prompt when switching to map view without permission
   useEffect(() => {
-    if (viewMode === 'map' && !hasLocationPermission && !userLocation) {
+    if (viewMode === 'map' && !userLocation && !isLocationLoading) {
       setShowLocationPrompt(true);
     } else {
       setShowLocationPrompt(false);
     }
-  }, [viewMode, hasLocationPermission, userLocation]);
+  }, [viewMode, userLocation, isLocationLoading]);
 
   const filteredMoves = moves.filter((move) => {
     // Filter by selected campus areas
@@ -143,17 +166,6 @@ export const ExploreScreen = ({
     return 0;
   });
 
-  // Calculate upcoming and live moves that user is hosting or joined
-  const myActiveMovesCount = moves.filter((move) => {
-    const isHostingOrJoined = move.hostName === userName || move.attendees.includes(userName);
-    if (!isHostingOrJoined) return false;
-    
-    const start = new Date(move.startTime).getTime();
-    const end = new Date(move.endTime).getTime();
-    const isLiveOrUpcoming = now < end; // Live Now or Upcoming
-    
-    return isLiveOrUpcoming;
-  }).length;
 
   return (
     <>
@@ -435,7 +447,7 @@ export const ExploreScreen = ({
               onJoinMove={onJoinMove}
               onLeaveMove={onLeaveMove}
               onSelectMove={onSelectMove}
-              userLocation={userLocation}
+              distance={getDistanceText(move)}
             />
           ))
         )}
