@@ -37,6 +37,7 @@ export const ExploreScreen = ({
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['Upcoming', 'Live Now']);
   const [selectedCategories, setSelectedCategories] = useState<ActivityType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'upcoming' | 'newest' | 'popularity'>('upcoming');
@@ -217,48 +218,48 @@ export const ExploreScreen = ({
         </div>
       )}
 
-      <section className="explore-tools">
-        {/* Tab Navigation for Explore, Joined, Hosting, Saved */}
-        <nav className="my-moves-tabs" role="tablist" aria-label="Move Views">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeView === 'explore'}
-            className={`my-moves-tab ${activeView === 'explore' ? 'my-moves-tab--active' : ''}`}
-            onClick={() => setActiveView('explore')}
-          >
-            Explore
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeView === 'joined'}
-            className={`my-moves-tab ${activeView === 'joined' ? 'my-moves-tab--active' : ''}`}
-            onClick={() => setActiveView('joined')}
-          >
-            Joined
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeView === 'hosting'}
-            className={`my-moves-tab ${activeView === 'hosting' ? 'my-moves-tab--active' : ''}`}
-            onClick={() => setActiveView('hosting')}
-          >
-            Hosting
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeView === 'saved'}
-            className={`my-moves-tab ${activeView === 'saved' ? 'my-moves-tab--active' : ''}`}
-            onClick={() => setActiveView('saved')}
-          >
-            Saved
-          </button>
-        </nav>
+      {/* Tab Navigation for Explore, Joined, Hosting, Saved */}
+      <nav className="my-moves-tabs" role="tablist" aria-label="Move Views">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === 'explore'}
+          className={`my-moves-tab ${activeView === 'explore' ? 'my-moves-tab--active' : ''}`}
+          onClick={() => setActiveView('explore')}
+        >
+          Explore
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === 'joined'}
+          className={`my-moves-tab ${activeView === 'joined' ? 'my-moves-tab--active' : ''}`}
+          onClick={() => setActiveView('joined')}
+        >
+          Joined
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === 'hosting'}
+          className={`my-moves-tab ${activeView === 'hosting' ? 'my-moves-tab--active' : ''}`}
+          onClick={() => setActiveView('hosting')}
+        >
+          Hosting
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === 'saved'}
+          className={`my-moves-tab ${activeView === 'saved' ? 'my-moves-tab--active' : ''}`}
+          onClick={() => setActiveView('saved')}
+        >
+          Saved
+        </button>
+      </nav>
 
-        <div className="search-and-filters">
+      <section className="explore-tools">
+        <div className={`search-and-filters ${isSearchFocused ? 'search-focused' : ''}`}>
           <label className="search">
             <span className="sr-only">Search moves</span>
             <input
@@ -266,6 +267,8 @@ export const ExploreScreen = ({
               placeholder="Search by activity, location, or keyword"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
             />
           </label>
 
