@@ -210,6 +210,12 @@ img {
   flex-wrap: wrap;
 }
 
+.filter-buttons-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .search input {
   width: 100%;
   border-radius: 16px;
@@ -1983,6 +1989,9 @@ img {
     cursor: text;
     color: var(--ink);
     background-position: 12px center;
+    outline: 2px solid var(--purple);
+    outline-offset: -2px;
+    border-color: var(--purple);
   }
 
   .search input:focus::placeholder,
@@ -1992,6 +2001,14 @@ img {
 
   .filter-button {
     padding: 10px 14px;
+  }
+
+  /* Filter Menu - Adjust for mobile */
+  .filter-menu {
+    right: auto;
+    left: 0;
+    max-width: calc(100vw - 40px);
+    min-width: min(280px, calc(100vw - 40px));
   }
 
   /* Move Cards */
