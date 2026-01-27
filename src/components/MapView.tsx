@@ -127,8 +127,8 @@ export const MapView = ({
         <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
           {/* Layer Control for switching between map types */}
           <LayersControl position="topright">
-            {/* OpenStreetMap - Default Street View */}
-            <BaseLayer checked name="Street Map">
+            {/* OpenStreetMap - Street View */}
+            <BaseLayer name="Street Map">
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -136,8 +136,8 @@ export const MapView = ({
               />
             </BaseLayer>
 
-            {/* CartoDB Positron - Clean Light Style */}
-            <BaseLayer name="Clean (Light)">
+            {/* CartoDB Positron - Clean Light Style (Default) */}
+            <BaseLayer checked name="Clean (Light)">
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
