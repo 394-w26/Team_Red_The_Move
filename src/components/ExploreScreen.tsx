@@ -84,7 +84,7 @@ export const ExploreScreen = ({
     }
   }, [viewMode, hasLocationPermission, userLocation]);
 
-  // Handle sticky tabs with overflow-x: hidden workaround
+  // Handle sticky tabs - works with .screen internal scrolling (Vicheda's layout)
   useEffect(() => {
     const handleScroll = () => {
       if (!tabsRef.current || !tabsContainerRef.current) return;
@@ -100,10 +100,22 @@ export const ExploreScreen = ({
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial state
+    // Find the .screen element (scroll container in Vicheda's layout)
+    const screenElement = tabsRef.current?.closest('.screen');
     
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (screenElement) {
+      // Listen to scroll on .screen container (Vicheda's layout)
+      screenElement.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll(); // Check initial state
+      
+      return () => screenElement.removeEventListener('scroll', handleScroll);
+    } else {
+      // Fallback to window scroll (if .screen not found)
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
   }, []);
 
   const filteredMoves = moves.filter((move) => {
