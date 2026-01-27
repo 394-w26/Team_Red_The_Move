@@ -1,12 +1,35 @@
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { X } from 'lucide-react';
+import { X, MapPin } from 'lucide-react';
 import type { Move, ActivityType } from '../types';
 import { getDefaultCoordinatesForArea } from '../utilities/locations';
 import { MoveCard } from './MoveCard';
 
 const { BaseLayer } = LayersControl;
+
+// Component to handle centering map on user location
+const CenterMapButton = ({ userLocation }: { userLocation?: { latitude: number; longitude: number } | null }) => {
+  const map = useMap();
+
+  const handleCenterMap = () => {
+    if (userLocation) {
+      map.setView([userLocation.latitude, userLocation.longitude], 16);
+    }
+  };
+
+  return userLocation ? (
+    <button
+      type="button"
+      className="map-center-btn"
+      onClick={handleCenterMap}
+      aria-label="Center map on your location"
+      title="I'm here"
+    >
+      <MapPin size={20} />
+    </button>
+  ) : null;
+};
 
 // Helper to create category-specific markers
 const createCategoryIcon = (category: ActivityType) => {
@@ -125,6 +148,9 @@ export const MapView = ({
       </div>
       <div className="map-container-fullscreen">
         <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
+          {/* Center on user location button */}
+          <CenterMapButton userLocation={userLocation} />
+          
           {/* Layer Control for switching between map types */}
           <LayersControl position="topright">
             {/* OpenStreetMap - Street View */}
@@ -145,14 +171,6 @@ export const MapView = ({
               />
             </BaseLayer>
 
-            {/* Stamen Watercolor - Artistic Style */}
-            <BaseLayer name="Watercolor">
-              <TileLayer
-                attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg"
-                maxZoom={16}
-              />
-            </BaseLayer>
           </LayersControl>
 
           {/* Markers for each move */}

@@ -77,7 +77,9 @@ export const ExploreScreen = ({
 
   // Show location prompt when switching to map view without permission
   useEffect(() => {
+    console.log('Location check:', { viewMode, hasLocationPermission, userLocation });
     if (viewMode === 'map' && !hasLocationPermission && !userLocation) {
+      console.log('Showing location prompt');
       setShowLocationPrompt(true);
     } else {
       setShowLocationPrompt(false);
@@ -223,34 +225,27 @@ export const ExploreScreen = ({
     <>
       {showLocationPrompt && (
         <div className="location-prompt">
-          <div className="location-prompt-content">
-            <MapPin size={20} />
-            <div className="location-prompt-text">
-              <p>
-                <strong>Enable location services</strong> to see your position on the map and find moves near you.
-              </p>
-              {locationError && <p className="error-text">{locationError}</p>}
-            </div>
-            <div className="location-prompt-actions">
-              <button
-                type="button"
-                className="btn btn--small btn--primary"
-                onClick={() => {
-                  requestLocation();
-                  setShowLocationPrompt(false);
-                }}
-                disabled={isLocationLoading}
-              >
-                {isLocationLoading ? 'Getting location...' : 'Enable Location'}
-              </button>
-              <button
-                type="button"
-                className="btn btn--small btn--ghost"
-                onClick={() => setShowLocationPrompt(false)}
-              >
-                Skip
-              </button>
-            </div>
+          <MapPin size={18} />
+          <p>Enable location to see where you are</p>
+          <div className="location-prompt-actions">
+            <button
+              type="button"
+              className="btn btn--small btn--primary"
+              onClick={() => {
+                requestLocation();
+                setShowLocationPrompt(false);
+              }}
+              disabled={isLocationLoading}
+            >
+              {isLocationLoading ? 'Loading...' : 'Enable'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--small btn--ghost"
+              onClick={() => setShowLocationPrompt(false)}
+            >
+              Skip
+            </button>
           </div>
         </div>
       )}

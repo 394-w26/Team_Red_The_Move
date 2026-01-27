@@ -2068,6 +2068,36 @@ img {
   transform: scale(1.05);
 }
 
+/* "I'm here" button on map */
+.map-center-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: var(--purple);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(31, 26, 43, 0.15);
+}
+
+.map-center-btn:hover {
+  background: var(--sky);
+  box-shadow: 0 4px 12px rgba(31, 26, 43, 0.2);
+  transform: scale(1.08);
+}
+
+.map-center-btn:active {
+  transform: scale(0.95);
+}
+
 .map-container-fullscreen {
   flex: 1;
   overflow: hidden;
@@ -2387,40 +2417,38 @@ img {
 }
 /* Location prompt banner styles */
 .location-prompt {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  position: relative;
+  z-index: 500;
+  background: linear-gradient(140deg, rgba(78, 42, 132, 1), rgba(249, 196, 92, 0.35));
   color: white;
-  padding: 16px 20px;
-  margin: 0 -20px 24px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
-}
-
-.location-prompt-content {
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.location-prompt-text {
+.location-prompt p {
+  margin: 0;
+  font-size: 0.875rem;
   flex: 1;
-  min-width: 200px;
-}
-
-.location-prompt-text p {
-  margin: 0 0 4px 0;
-  font-size: 0.9rem;
-}
-
-.error-text {
-  color: #fecaca !important;
-  font-size: 0.85rem !important;
+  min-width: 150px;
 }
 
 .location-prompt-actions {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+}
+.location-prompt-actions .btn--primary{
+  background: white;
+  color: var(--purple)
+}
+.location-prompt-actions .btn--ghost{
+  background: var(--purple);
+  color: white
 }
 
 /* User location marker animation */
