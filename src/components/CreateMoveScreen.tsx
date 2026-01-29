@@ -40,7 +40,7 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
 
   const initialNow = new Date();
   initialNow.setSeconds(0, 0);
-  const initialEnd = new Date(initialNow.getTime() + 60 * 60 * 1000);
+  const initialEnd = new Date(initialNow.getTime() + 60 * 60 * 1000); // Same date, one hour later
 
   const [formState, setFormState] = useState<FormState>({
     title: '',
@@ -73,7 +73,7 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
   const activityMenuRef = useRef<HTMLDivElement | null>(null);
   const areaMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const validateAndSetStartTime = (datePart: string, timePart: string) => {
+  const validateAndSetStartTime = (datePart: string, timePart: string, isTimeChange: boolean = false) => {
     const candidate = `${datePart}T${timePart}`;
     const candidateTime = new Date(candidate).getTime();
     const nowValue = new Date();
@@ -86,7 +86,29 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
       return;
     }
     setStartTimeWarning('');
-    setFormState((prev) => ({ ...prev, startTime: candidate }));
+    
+    // Update start time
+    setFormState((prev) => {
+      const newState = { ...prev, startTime: candidate };
+      
+      // Auto-update end date to match start date if they're different
+      const currentEndDate = getDatePart(prev.endTime);
+      if (currentEndDate !== datePart) {
+        const currentEndTime = getTimePart(prev.endTime);
+        newState.endTime = `${datePart}T${currentEndTime}`;
+      }
+      
+      // Auto-update end time to be one hour after start time when start time changes
+      if (isTimeChange) {
+        const startDate = new Date(candidate);
+        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Add one hour
+        const endDatePart = getDatePart(newState.endTime); // Use the updated end date
+        const newEndTime = getLocalTimeString(endDate);
+        newState.endTime = `${endDatePart}T${newEndTime}`;
+      }
+      
+      return newState;
+    });
   };
 
   const validateAndSetEndTime = (datePart: string, timePart: string) => {
@@ -157,7 +179,7 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
     });
     const resetNow = new Date();
     resetNow.setSeconds(0, 0);
-    const resetEnd = new Date(resetNow.getTime() + 60 * 60 * 1000);
+    const resetEnd = new Date(resetNow.getTime() + 60 * 60 * 1000); // Same date, one hour later
     setFormState({
       title: '',
       description: '',
@@ -405,7 +427,7 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
               onChange={(event) => {
                 const nextTime = event.target.value;
                 const datePart = getDatePart(formState.startTime);
-                validateAndSetStartTime(datePart, nextTime);
+                validateAndSetStartTime(datePart, nextTime, true);
               }}
               required
             />
