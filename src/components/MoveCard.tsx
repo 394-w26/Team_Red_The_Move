@@ -1,7 +1,7 @@
 import type { Move, ActivityType, CampusArea } from '../types';
 import { getStatusLabel, calculateDistance, formatDistance } from '../utilities/helpers';
 import { BookOpen, CalendarClock, MapPin, Star, UserRound, Users, UtensilsCrossed } from 'lucide-react';
-import type { ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useSavedMoves } from '../contexts/SavedMovesContext';
 
 type MoveCardProps = {
@@ -27,6 +27,21 @@ export const MoveCard = ({
   userLocation,
   variant = 'default',
 }: MoveCardProps) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 600px)');
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+    handleChange();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
+
   const isJoined = move.attendees.includes(userName);
   const isHost = move.hostName === userName;
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
@@ -42,6 +57,18 @@ export const MoveCard = ({
   const displayDistance = distance || (userLocation && move.latitude && move.longitude 
     ? formatDistance(calculateDistance(userLocation.latitude, userLocation.longitude, move.latitude, move.longitude))
     : null);
+
+  const mobileTitle = useMemo(() => {
+    if (!isMobile) return move.title;
+    if (move.title.length <= 7) return move.title;
+    const seventh = move.title[6] ?? '';
+    const eighth = move.title[7] ?? '';
+    const needsHyphen = seventh !== ' ' && eighth !== ' ';
+    if (move.title.length <= 14) {
+      return `${move.title.slice(0, 7)}${needsHyphen ? '-' : ''}\n${move.title.slice(7)}`;
+    }
+    return `${move.title.slice(0, 7)}${needsHyphen ? '-' : ''}\n${move.title.slice(7, 14)}...`;
+  }, [isMobile, move.title]);
 
   const activityIcons: Record<ActivityType, ReactElement> = {
     Food: <UtensilsCrossed size={14} />,
@@ -112,7 +139,9 @@ export const MoveCard = ({
       >
         <div className="move-card__body move-card__body--stack">
           <div className="move-card__title-row">
-            <h3 className="move-card__title">{move.title}</h3>
+            <h3 className={`move-card__title${isMobile ? ' move-card__title--mobile' : ''}`}>
+              {mobileTitle}
+            </h3>
             <div className="move-card__badges">
               <span className="move-card__badge">{activityIcons[move.activityType]}</span>
               <span className="move-card__badge move-card__badge--text">{areaLabels[move.area]}</span>

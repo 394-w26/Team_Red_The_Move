@@ -539,6 +539,10 @@ img {
   font-size: 1.1rem;
 }
 
+.move-card__title--mobile {
+  white-space: pre-line;
+}
+
 .move-card__badges {
   display: inline-flex;
   gap: 4px;
@@ -1821,6 +1825,14 @@ img {
 }
 
 @media (max-width: 600px) {
+  .move-card__title-row {
+    align-items: flex-start;
+  }
+
+  .move-card__badges {
+    margin-top: 2px;
+  }
+
   .header-card {
     flex-direction: column;
     align-items: flex-start;
