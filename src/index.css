@@ -1591,10 +1591,20 @@ img {
   min-width: 0;
 }
 
+.detail__info {
+  text-align: left;
+}
+
+.detail__info-row {
+  justify-content: flex-start;
+  text-align: left;
+}
+
 .detail__info-row span {
   overflow-wrap: break-word;
   word-break: break-word;
   min-width: 0;
+  text-align: left;
 }
 
 .detail__info-row svg {
@@ -1603,6 +1613,7 @@ img {
   flex-shrink: 0;
 }
 
+/* Location row: address and arrow in one button so arrow follows address on same line */
 .location-link {
   background: none;
   border: none;
@@ -1614,10 +1625,18 @@ img {
   text-decoration: underline;
   font-weight: 600;
   transition: opacity 0.2s ease;
+  text-align: left;
+  display: inline;
 }
 
 .location-link:hover {
   opacity: 0.7;
+}
+
+.location-link__arrow {
+  font-weight: 700;
+  font-size: 1.2em;
+  white-space: nowrap;
 }
 
 .directions-arrow {
@@ -1631,6 +1650,7 @@ img {
   font-size: 1.2em;
   font-weight: 700;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .directions-arrow:hover {
@@ -2044,8 +2064,15 @@ img {
     padding: 12px 14px;
   }
 
+  .detail__info,
+  .detail__info-row,
+  .detail__info-row span {
+    text-align: left;
+  }
+
   .detail__info-row {
     font-size: 0.9rem;
+    justify-content: flex-start;
   }
 
   .detail__badges {

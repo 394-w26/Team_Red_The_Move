@@ -190,15 +190,7 @@ export const MoveDetailScreen = ({
                   aria-label={`Open directions to ${displayLocation}`}
                 >
                   {displayLocation}
-                </button>
-                {' '}
-                <button
-                  type="button"
-                  className="directions-arrow"
-                  onClick={() => setShowDirectionsConfirm(true)}
-                  aria-label={`Open directions to ${displayLocation}`}
-                >
-                  →
+                  <span className="location-link__arrow" aria-hidden="true"> →</span>
                 </button>
               </span>
             </div>
