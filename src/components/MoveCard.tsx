@@ -1,4 +1,4 @@
-import type { Move, ActivityType, CampusArea } from '../types';
+import type { Move, ActivityType } from '../types';
 import { getStatusLabel, calculateDistance, formatDistance } from '../utilities/helpers';
 import { BookOpen, CalendarClock, MapPin, Star, UserRound, Users, UtensilsCrossed } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
@@ -60,14 +60,14 @@ export const MoveCard = ({
 
   const mobileTitle = useMemo(() => {
     if (!isMobile) return move.title;
-    if (move.title.length <= 7) return move.title;
-    const seventh = move.title[6] ?? '';
-    const eighth = move.title[7] ?? '';
-    const needsHyphen = seventh !== ' ' && eighth !== ' ';
-    if (move.title.length <= 14) {
-      return `${move.title.slice(0, 7)}${needsHyphen ? '-' : ''}\n${move.title.slice(7)}`;
+    if (move.title.length <= 12) return move.title;
+    const twelfth = move.title[11] ?? '';
+    const thirteenth = move.title[12] ?? '';
+    const needsHyphen = twelfth !== ' ' && thirteenth !== ' ';
+    if (move.title.length <= 24) {
+      return `${move.title.slice(0, 12)}${needsHyphen ? '-' : ''}\n${move.title.slice(12)}`;
     }
-    return `${move.title.slice(0, 7)}${needsHyphen ? '-' : ''}\n${move.title.slice(7, 14)}...`;
+    return `${move.title.slice(0, 12)}${needsHyphen ? '-' : ''}\n${move.title.slice(12, 24)}...`;
   }, [isMobile, move.title]);
 
   const activityIcons: Record<ActivityType, ReactElement> = {
@@ -84,13 +84,6 @@ export const MoveCard = ({
     ),
     Social: <Users size={14} />,
     Other: <Users size={14} />,
-  };
-
-  const areaLabels: Record<CampusArea, string> = {
-    North: 'N',
-    South: 'S',
-    Downtown: 'DT',
-    Other: 'OT',
   };
 
   const formatDateRangeWithRelative = (startIso: string, endIso: string) => {
@@ -142,10 +135,6 @@ export const MoveCard = ({
             <h3 className={`move-card__title${isMobile ? ' move-card__title--mobile' : ''}`}>
               {mobileTitle}
             </h3>
-            <div className="move-card__badges">
-              <span className="move-card__badge">{activityIcons[move.activityType]}</span>
-              {/* <span className="move-card__badge move-card__badge--text">{areaLabels[move.area]}</span> */}
-            </div>
           </div>
           {move.remarks && <p className="move-card__prompt">{move.remarks}</p>}
           <div className="move-card__meta-stack">
@@ -168,17 +157,22 @@ export const MoveCard = ({
         </div>
         <div className="move-card__right">
           <div className="move-card__status">
-            <span
-              className={`status-badge ${statusLabel === 'Past' ? 'status-badge--past' : ''}`}
-            >
+            <div className="move-card__status-row">
+              <div className="move-card__badges">
+                <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+              </div>
               <span
-                className={`status-dot status-dot--${statusLabel
-                  .toLowerCase()
-                  .replace(' ', '-')}`}
-                aria-hidden="true"
-              />
-              {statusLabel}
-            </span>
+                className={`status-badge ${statusLabel === 'Past' ? 'status-badge--past' : ''}`}
+              >
+                <span
+                  className={`status-dot status-dot--${statusLabel
+                    .toLowerCase()
+                    .replace(' ', '-')}`}
+                  aria-hidden="true"
+                />
+                {statusLabel}
+              </span>
+            </div>
           </div>
           <div className="move-card__actions move-card__actions--right">
             <span className="attendee-count attendee-count--with-icon">

@@ -629,6 +629,12 @@ img {
   gap: 6px;
 }
 
+.move-card__status-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .move-card--popup .move-card__status {
   justify-items: start;
   gap: 4px;
