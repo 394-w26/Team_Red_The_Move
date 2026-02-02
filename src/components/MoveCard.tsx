@@ -144,7 +144,7 @@ export const MoveCard = ({
             </h3>
             <div className="move-card__badges">
               <span className="move-card__badge">{activityIcons[move.activityType]}</span>
-              <span className="move-card__badge move-card__badge--text">{areaLabels[move.area]}</span>
+              {/* <span className="move-card__badge move-card__badge--text">{areaLabels[move.area]}</span> */}
             </div>
           </div>
           {move.remarks && <p className="move-card__prompt">{move.remarks}</p>}

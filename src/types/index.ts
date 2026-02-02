@@ -65,3 +65,10 @@ export const FILTER_OPTIONS: Array<'All' | CampusArea | ActivityType> = [
   'Social',
   'Other',
 ];
+
+export const AREA_LABELS: Record<CampusArea, string> = {
+  North: 'North Campus',
+  South: 'South Campus',
+  Downtown: 'Downtown Evanston',
+  Other: 'Other',
+};

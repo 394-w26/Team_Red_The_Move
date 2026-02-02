@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { Move, ActivityType, CampusArea } from '../types';
+import { AREA_LABELS, type Move, type ActivityType, type CampusArea } from '../types';
 import { formatTimeAgo, formatEventTime } from '../utilities/helpers';
 import { useSavedMoves } from '../contexts/SavedMovesContext';
 import {
@@ -169,7 +169,7 @@ export const MoveDetailScreen = ({
         <div className="detail__badges">
           <span className="detail__badge">
             {areaIcons[move.area]}
-            {move.area}
+            {AREA_LABELS[move.area]}
           </span>
           <span className="detail__badge">
             {activityIcons[move.activityType]}

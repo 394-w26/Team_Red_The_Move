@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { CampusArea, ActivityType } from '../types';
-import { AREA_FILTERS, ACTIVITY_FILTERS } from '../types';
+import { AREA_FILTERS, AREA_LABELS, ACTIVITY_FILTERS } from '../types';
 import { fetchPlaceDetails, fetchPlacePredictions, type PlacePrediction } from '../utilities/geocode';
 
 type FormState = {
@@ -796,7 +796,7 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
                     setIsActivityMenuOpen(false);
                   }}
                 >
-                  {formState.area}
+                {AREA_LABELS[formState.area]}
                 </button>
                 {isAreaMenuOpen && (
                   <div className="form-select__menu" role="listbox">
@@ -812,10 +812,10 @@ export const CreateMoveScreen = ({ onCreateMove, onClose }: CreateMoveScreenProp
                           setIsAreaMenuOpen(false);
                         }}
                       >
-                        {area}
+                        {AREA_LABELS[area]}
                       </button>
                     ))}
-                  </div>
+                </div>
                 )}
               </div>
             </label>
