@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { Map as MapIcon, List as ListIcon, MapPin, Star } from 'lucide-react';
+import { Map as MapIcon, List as ListIcon, CalendarClock, MapPin, Star, UserRound } from 'lucide-react';
 import type { Move, CampusArea, ActivityType } from '../types';
-import { AREA_FILTERS } from '../types';
+import { AREA_FILTERS, AREA_LABELS } from '../types';
 import { MoveCard } from './MoveCard';
 import { MapView } from './MapView';
+import { activityIcons } from './activityIcons';
 import { useSavedMoves } from '../contexts/SavedMovesContext';
 import { useLocation } from '../contexts/LocationContext';
-import { formatTimeAgo, formatEventTime, getStatusLabel } from '../utilities/helpers';
+import { formatDateRangeWithRelative, getStatusLabel } from '../utilities/helpers';
 
 type ExploreScreenProps = {
   moves: Move[];
@@ -21,14 +22,14 @@ type ExploreScreenProps = {
   onEditMove?: (moveId: string) => void;
 };
 
-export const ExploreScreen = ({ 
-  moves, 
-  now, 
-  userName, 
+export const ExploreScreen = ({
+  moves,
+  now,
+  userName,
   joinedMoves,
   hostingMoves,
-  onJoinMove, 
-  onLeaveMove, 
+  onJoinMove,
+  onLeaveMove,
   onSelectMove,
   onCancelMove,
   onEditMove,
@@ -45,10 +46,10 @@ export const ExploreScreen = ({
   const [activeView, setActiveView] = useState<'explore' | 'joined' | 'hosting' | 'saved'>('explore');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [showMyUpcoming, setShowMyUpcoming] = useState(false);
-  
+
   const { unsaveMove, isSaved } = useSavedMoves();
   const { userLocation, isLocationLoading, requestLocation, hasLocationPermission } = useLocation();
-  
+
   const filterRef = useRef<HTMLDivElement | null>(null);
   const sortRef = useRef<HTMLDivElement | null>(null);
   const tabsRef = useRef<HTMLElement | null>(null);
@@ -57,7 +58,7 @@ export const ExploreScreen = ({
 
   const areaOptions = AREA_FILTERS.filter((area) => area !== 'All') as CampusArea[];
   const statusOptions = ['Upcoming', 'Live Now', 'Past'] as const;
-  const categoryOptions: ActivityType[] = ['Sports', 'Social', 'Food', 'Study'];
+  const categoryOptions: ActivityType[] = ['Sports', 'Social', 'Food', 'Study', 'Other'];
 
   // Filter all moves to get only saved ones from the full collection
   const savedMoves = moves.filter((move) => isSaved(move.id));
@@ -90,9 +91,9 @@ export const ExploreScreen = ({
   useEffect(() => {
     const handleScroll = () => {
       if (!tabsRef.current || !tabsContainerRef.current) return;
-      
+
       const containerRect = tabsContainerRef.current.getBoundingClientRect();
-      
+
       // Check if tabs should be sticky (when scrolled past their original position)
       // When container top is at or above viewport top, switch to fixed
       if (containerRect.top <= 0) {
@@ -104,18 +105,18 @@ export const ExploreScreen = ({
 
     // Find the .screen element (scroll container in Vicheda's layout)
     const screenElement = tabsRef.current?.closest('.screen');
-    
+
     if (screenElement) {
       // Listen to scroll on .screen container (Vicheda's layout)
       screenElement.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll(); // Check initial state
-      
+
       return () => screenElement.removeEventListener('scroll', handleScroll);
     } else {
       // Fallback to window scroll (if .screen not found)
       window.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll();
-      
+
       return () => window.removeEventListener('scroll', handleScroll);
     }
   }, []);
@@ -174,7 +175,7 @@ export const ExploreScreen = ({
     if (sortBy === 'newest') {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
-    
+
     if (sortBy === 'popularity') {
       const attendeesDelta = b.attendees.length - a.attendees.length;
       if (attendeesDelta !== 0) return attendeesDelta;
@@ -252,49 +253,49 @@ export const ExploreScreen = ({
 
       {/* Tab Navigation for Explore, Joined, Hosting, Saved */}
       <div ref={tabsContainerRef}>
-        <nav 
+        <nav
           ref={tabsRef}
           className={`my-moves-tabs ${isTabsSticky ? 'my-moves-tabs--fixed' : ''}`}
-          role="tablist" 
+          role="tablist"
           aria-label="Move Views"
         >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === 'explore'}
-          className={`my-moves-tab ${activeView === 'explore' ? 'my-moves-tab--active' : ''}`}
-          onClick={() => setActiveView('explore')}
-        >
-          Explore
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === 'joined'}
-          className={`my-moves-tab ${activeView === 'joined' ? 'my-moves-tab--active' : ''}`}
-          onClick={() => setActiveView('joined')}
-        >
-          Joined
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === 'hosting'}
-          className={`my-moves-tab ${activeView === 'hosting' ? 'my-moves-tab--active' : ''}`}
-          onClick={() => setActiveView('hosting')}
-        >
-          Hosting
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === 'saved'}
-          className={`my-moves-tab ${activeView === 'saved' ? 'my-moves-tab--active' : ''}`}
-          onClick={() => setActiveView('saved')}
-        >
-          Saved
-        </button>
-      </nav>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'explore'}
+            className={`my-moves-tab ${activeView === 'explore' ? 'my-moves-tab--active' : ''}`}
+            onClick={() => setActiveView('explore')}
+          >
+            Explore
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'joined'}
+            className={`my-moves-tab ${activeView === 'joined' ? 'my-moves-tab--active' : ''}`}
+            onClick={() => setActiveView('joined')}
+          >
+            Joined
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'hosting'}
+            className={`my-moves-tab ${activeView === 'hosting' ? 'my-moves-tab--active' : ''}`}
+            onClick={() => setActiveView('hosting')}
+          >
+            Hosting
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'saved'}
+            className={`my-moves-tab ${activeView === 'saved' ? 'my-moves-tab--active' : ''}`}
+            onClick={() => setActiveView('saved')}
+          >
+            Saved
+          </button>
+        </nav>
       </div>
 
       <section className="explore-tools">
@@ -336,154 +337,154 @@ export const ExploreScreen = ({
                     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                   </svg>
                 </button>
-          {isFilterOpen && (
-            <div className="filter-menu">
-              <div className="filter-section">
-                <label className="filter-option">
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedAreas.length === areaOptions.length &&
-                      selectedStatuses.length === statusOptions.length &&
-                      selectedCategories.length === categoryOptions.length
-                    }
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        setSelectedAreas(areaOptions);
-                        setSelectedStatuses([...statusOptions]);
-                        setSelectedCategories(categoryOptions);
-                      } else {
-                        setSelectedAreas([]);
-                        setSelectedStatuses([]);
-                        setSelectedCategories([]);
-                      }
-                    }}
-                  />
-                  <span>All</span>
-                </label>
+                {isFilterOpen && (
+                  <div className="filter-menu">
+                    <div className="filter-section">
+                      <label className="filter-option">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedAreas.length === areaOptions.length &&
+                            selectedStatuses.length === statusOptions.length &&
+                            selectedCategories.length === categoryOptions.length
+                          }
+                          onChange={(event) => {
+                            if (event.target.checked) {
+                              setSelectedAreas(areaOptions);
+                              setSelectedStatuses([...statusOptions]);
+                              setSelectedCategories(categoryOptions);
+                            } else {
+                              setSelectedAreas([]);
+                              setSelectedStatuses([]);
+                              setSelectedCategories([]);
+                            }
+                          }}
+                        />
+                        <span>All</span>
+                      </label>
+                    </div>
+
+                    <div className="filter-section">
+                      <h4>Status</h4>
+                      {statusOptions.map((status) => (
+                        <label key={status} className="filter-option">
+                          <input
+                            type="checkbox"
+                            checked={selectedStatuses.includes(status)}
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                setSelectedStatuses((prev) => [...prev, status]);
+                              } else {
+                                setSelectedStatuses((prev) => prev.filter((item) => item !== status));
+                              }
+                            }}
+                          />
+                          <span>{status}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <div className="filter-section">
+                      <h4>Category</h4>
+                      {categoryOptions.map((category) => (
+                        <label key={category} className="filter-option">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(category)}
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                setSelectedCategories((prev) => [...prev, category]);
+                              } else {
+                                setSelectedCategories((prev) => prev.filter((item) => item !== category));
+                              }
+                            }}
+                          />
+                          <span>{category}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <div className="filter-section">
+                      <h4>Campus Area</h4>
+                      {areaOptions.map((area) => (
+                        <label key={area} className="filter-option">
+                          <input
+                            type="checkbox"
+                            checked={selectedAreas.includes(area as CampusArea)}
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                setSelectedAreas((prev) => [...prev, area as CampusArea]);
+                              } else {
+                                setSelectedAreas((prev) => prev.filter((item) => item !== area));
+                              }
+                            }}
+                          />
+                          <span>{AREA_LABELS[area]}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="filter-section">
-                <h4>Status</h4>
-                {statusOptions.map((status) => (
-                  <label key={status} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedStatuses.includes(status)}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          setSelectedStatuses((prev) => [...prev, status]);
-                        } else {
-                          setSelectedStatuses((prev) => prev.filter((item) => item !== status));
-                        }
-                      }}
-                    />
-                    <span>{status}</span>
-                  </label>
-                ))}
-              </div>
-
-              <div className="filter-section">
-                <h4>Category</h4>
-                {categoryOptions.map((category) => (
-                  <label key={category} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category)}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          setSelectedCategories((prev) => [...prev, category]);
-                        } else {
-                          setSelectedCategories((prev) => prev.filter((item) => item !== category));
-                        }
-                      }}
-                    />
-                    <span>{category}</span>
-                  </label>
-                ))}
-              </div>
-
-              <div className="filter-section">
-                <h4>Campus Area</h4>
-                {areaOptions.map((area) => (
-                  <label key={area} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedAreas.includes(area as CampusArea)}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          setSelectedAreas((prev) => [...prev, area as CampusArea]);
-                        } else {
-                          setSelectedAreas((prev) => prev.filter((item) => item !== area));
-                        }
-                      }}
-                    />
-                    <span>{area}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-            </div>
-
-            <div className="sort-dropdown" ref={sortRef}>
-          <button
-            type="button"
-            className="filter-button"
-            onClick={() => {
-              setIsSortOpen(!isSortOpen);
-              setIsFilterOpen(false);
-            }}
-            aria-label="Sort moves"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m21 16-4 4-4-4" />
-              <path d="M17 20V4" />
-              <path d="m3 8 4-4 4 4" />
-              <path d="M7 4v16" />
-            </svg>
-          </button>
-          {isSortOpen && (
-            <div className="filter-menu sort-menu">
-              {[
-                { value: 'upcoming', label: 'Upcoming' },
-                { value: 'newest', label: 'Newest Post' },
-                { value: 'popularity', label: 'Most popular' },
-              ].map((option) => (
+              <div className="sort-dropdown" ref={sortRef}>
                 <button
-                  key={option.value}
                   type="button"
-                  className={`view-option ${sortBy === option.value ? 'view-option--active' : ''}`}
+                  className="filter-button"
                   onClick={() => {
-                    setSortBy(option.value as 'upcoming' | 'newest' | 'popularity');
-                    setIsSortOpen(false);
+                    setIsSortOpen(!isSortOpen);
+                    setIsFilterOpen(false);
                   }}
+                  aria-label="Sort moves"
                 >
-                  {option.label}
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m21 16-4 4-4-4" />
+                    <path d="M17 20V4" />
+                    <path d="m3 8 4-4 4 4" />
+                    <path d="M7 4v16" />
+                  </svg>
                 </button>
-              ))}
-            </div>
-          )}
-            </div>
+                {isSortOpen && (
+                  <div className="filter-menu sort-menu">
+                    {[
+                      { value: 'upcoming', label: 'Upcoming' },
+                      { value: 'newest', label: 'Newest Post' },
+                      { value: 'popularity', label: 'Most popular' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`view-option ${sortBy === option.value ? 'view-option--active' : ''}`}
+                        onClick={() => {
+                          setSortBy(option.value as 'upcoming' | 'newest' | 'popularity');
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <button
-              type="button"
-              className="filter-button"
-              onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
-              aria-label={viewMode === 'list' ? 'Switch to map view' : 'Switch to list view'}
-              style={{ background: 'var(--purple)', color: '#fff' }}
-            >
-              {viewMode === 'list' ? <MapIcon size={20} /> : <ListIcon size={20} />}
-            </button>
+              <button
+                type="button"
+                className="filter-button"
+                onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+                aria-label={viewMode === 'list' ? 'Switch to map view' : 'Switch to list view'}
+                style={{ background: 'var(--purple)', color: '#fff' }}
+              >
+                {viewMode === 'list' ? <MapIcon size={20} /> : <ListIcon size={20} />}
+              </button>
             </div>
           )}
         </div>
@@ -541,38 +542,38 @@ export const ExploreScreen = ({
         <>
           <section aria-live="polite" className="move-list">
             {exploreMoves.length === 0 ? (
-          <div className="empty-state">
-            <h3>No moves yet</h3>
-            <p>Try another filter or post a new hangout.</p>
-          </div>
-        ) : (
-          exploreMoves.map((move) => (
-            <MoveCard
-              key={move.id}
-              move={move}
+              <div className="empty-state">
+                <h3>No moves yet</h3>
+                <p>Try another filter or post a new hangout.</p>
+              </div>
+            ) : (
+              exploreMoves.map((move) => (
+                <MoveCard
+                  key={move.id}
+                  move={move}
+                  now={now}
+                  userName={userName}
+                  onJoinMove={onJoinMove}
+                  onLeaveMove={onLeaveMove}
+                  onSelectMove={onSelectMove}
+                  userLocation={userLocation}
+                />
+              ))
+            )}
+          </section>
+
+          {viewMode === 'map' && exploreMoves.length > 0 && (
+            <MapView
+              moves={exploreMoves}
               now={now}
               userName={userName}
               onJoinMove={onJoinMove}
               onLeaveMove={onLeaveMove}
               onSelectMove={onSelectMove}
               userLocation={userLocation}
+              onClose={() => setViewMode('list')}
             />
-          ))
-        )}
-          </section>
-
-        {viewMode === 'map' && exploreMoves.length > 0 && (
-          <MapView
-            moves={exploreMoves}
-            now={now}
-            userName={userName}
-            onJoinMove={onJoinMove}
-            onLeaveMove={onLeaveMove}
-            onSelectMove={onSelectMove}
-            userLocation={userLocation}
-            onClose={() => setViewMode('list')}
-          />
-        )}
+          )}
         </>
       )}
 
@@ -587,49 +588,74 @@ export const ExploreScreen = ({
           ) : (
             joinedMoves.map((move) => (
               <article key={move.id} className="move-card move-card--compact">
-                <div className="move-card__content">
-                  <div className="move-card__header">
+                <div
+                  className="move-card__content move-card__content--clickable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open ${move.title}`}
+                  onClick={() => onSelectMove(move.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectMove(move.id);
+                    }
+                  }}
+                >
+                  <div className="move-card__header move-card__header--single-row">
                     <div>
                       <h3>{move.title}</h3>
-                      <p className="move-card__subtitle">Hosted by {move.hostName}</p>
                     </div>
                     <div className="move-card__status">
-                      <span
-                        className={`status-badge ${
-                          getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                      <div className="move-card__status-row">
+                        <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                        <span
+                          className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
                             ? 'status-badge--past'
                             : ''
-                        }`}
-                      >
-                        {getStatusLabel(move.startTime, move.endTime, now)}
-                      </span>
-                      <span className="move-card__time">
-                        {formatTimeAgo(move.createdAt, now)}
-                      </span>
+                            }`}
+                        >
+                          <span
+                            className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                              .toLowerCase()
+                              .replace(' ', '-')}`}
+                            aria-hidden="true"
+                          />
+                          {getStatusLabel(move.startTime, move.endTime, now)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="move-card__meta">
-                    <span>{move.locationName || move.location}</span>
-                    <span>
-                      {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
-                    </span>
-                    <span>{move.activityType}</span>
+                  <div className="move-card__meta-stack">
+                    <div className="move-card__meta-row">
+                      <CalendarClock size={14} className="move-card__meta-icon" />
+                      <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                    </div>
+                    <div className="move-card__meta-row">
+                      <MapPin size={14} className="move-card__meta-icon" />
+                      <span>{(move.locationName || move.location).split(',')[0]}</span>
+                    </div>
+                    <div className="move-card__meta-row">
+                      <UserRound size={14} className="move-card__meta-icon" />
+                      <span>Hosted by {move.hostName}</span>
+                    </div>
                   </div>
                   <div className="move-card__footer">
-                    <span className="attendee-count">{move.attendees.length} going</span>
+                    <span className="attendee-count attendee-count--with-icon">
+                      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                        <circle cx="12" cy="7" r="4" fill="currentColor" />
+                        <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                      </svg>
+                      {move.attendees.length}/{move.maxParticipants}
+                    </span>
                     <div className="move-card__actions">
-                      <button
-                        className="btn btn--small"
-                        type="button"
-                        onClick={() => onSelectMove(move.id)}
-                      >
-                        Details
-                      </button>
                       <button
                         className="btn btn--small btn--ghost"
                         type="button"
                         aria-label={`Leave ${move.title}`}
-                        onClick={() => onLeaveMove(move.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onLeaveMove(move.id);
+                        }}
                       >
                         Leave
                       </button>
@@ -653,47 +679,83 @@ export const ExploreScreen = ({
           ) : (
             hostingMoves.map((move) => (
               <article key={move.id} className="move-card move-card--compact">
-                <div className="move-card__content">
-                  <div className="move-card__header">
+                <div
+                  className="move-card__content move-card__content--clickable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open ${move.title}`}
+                  onClick={() => onSelectMove(move.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectMove(move.id);
+                    }
+                  }}
+                >
+                  <div className="move-card__header move-card__header--single-row">
                     <div>
                       <h3>{move.title}</h3>
-                      <p className="move-card__subtitle">You&apos;re hosting</p>
                     </div>
                     <div className="move-card__status">
-                      <span
-                        className={`status-badge ${
-                          getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                      <div className="move-card__status-row">
+                        <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                        <span
+                          className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
                             ? 'status-badge--past'
                             : ''
-                        }`}
-                      >
-                        {getStatusLabel(move.startTime, move.endTime, now)}
-                      </span>
-                      <span className="move-card__time">
-                        {formatTimeAgo(move.createdAt, now)}
-                      </span>
+                            }`}
+                        >
+                          <span
+                            className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                              .toLowerCase()
+                              .replace(' ', '-')}`}
+                            aria-hidden="true"
+                          />
+                          {getStatusLabel(move.startTime, move.endTime, now)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="move-card__meta">
-                    <span>{move.locationName || move.location}</span>
-                    <span>
-                      {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
-                    </span>
+                  <div className="move-card__meta-stack">
+                    <div className="move-card__meta-row">
+                      <CalendarClock size={14} className="move-card__meta-icon" />
+                      <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                    </div>
+                    <div className="move-card__meta-row">
+                      <MapPin size={14} className="move-card__meta-icon" />
+                      <span>{(move.locationName || move.location).split(',')[0]}</span>
+                    </div>
+                    <div className="move-card__meta-row">
+                      <UserRound size={14} className="move-card__meta-icon" />
+                      <span>You&apos;re hosting</span>
+                    </div>
                   </div>
                   <div className="move-card__footer">
-                    <span className="attendee-count">{move.attendees.length} going</span>
+                    <span className="attendee-count attendee-count--with-icon">
+                      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                        <circle cx="12" cy="7" r="4" fill="currentColor" />
+                        <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                      </svg>
+                      {move.attendees.length}/{move.maxParticipants}
+                    </span>
                     <div className="move-card__actions">
                       <button
                         className="btn btn--ghost btn--small"
                         type="button"
-                        onClick={() => onEditMove?.(move.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditMove?.(move.id);
+                        }}
                       >
                         Edit
                       </button>
                       <button
                         className="btn btn--ghost btn--small"
                         type="button"
-                        onClick={() => onCancelMove(move.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancelMove(move.id);
+                        }}
                         aria-label="Cancel move"
                       >
                         <svg
@@ -710,13 +772,6 @@ export const ExploreScreen = ({
                           <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                           <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                         </svg>
-                      </button>
-                      <button
-                        className="btn btn--small"
-                        type="button"
-                        onClick={() => onSelectMove(move.id)}
-                      >
-                        Details
                       </button>
                     </div>
                   </div>
@@ -738,50 +793,75 @@ export const ExploreScreen = ({
           ) : (
             savedMoves.map((move) => (
               <article key={move.id} className="move-card move-card--compact">
-                <div className="move-card__content">
-                  <div className="move-card__header">
+                <div
+                  className="move-card__content move-card__content--clickable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open ${move.title}`}
+                  onClick={() => onSelectMove(move.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectMove(move.id);
+                    }
+                  }}
+                >
+                  <div className="move-card__header move-card__header--single-row">
                     <div>
                       <h3>{move.title}</h3>
-                      <p className="move-card__subtitle">Hosted by {move.hostName}</p>
                     </div>
                     <div className="move-card__status">
-                      <span
-                        className={`status-badge ${
-                          getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                      <div className="move-card__status-row">
+                        <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                        <span
+                          className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
                             ? 'status-badge--past'
                             : ''
-                        }`}
-                      >
-                        {getStatusLabel(move.startTime, move.endTime, now)}
-                      </span>
-                      <span className="move-card__time">
-                        {formatTimeAgo(move.createdAt, now)}
-                      </span>
+                            }`}
+                        >
+                          <span
+                            className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                              .toLowerCase()
+                              .replace(' ', '-')}`}
+                            aria-hidden="true"
+                          />
+                          {getStatusLabel(move.startTime, move.endTime, now)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="move-card__meta">
-                    <span>{move.locationName || move.location}</span>
-                    <span>
-                      {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
-                    </span>
-                    <span>{move.activityType}</span>
+                  <div className="move-card__meta-stack">
+                    <div className="move-card__meta-row">
+                      <CalendarClock size={14} className="move-card__meta-icon" />
+                      <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                    </div>
+                    <div className="move-card__meta-row">
+                      <MapPin size={14} className="move-card__meta-icon" />
+                      <span>{(move.locationName || move.location).split(',')[0]}</span>
+                    </div>
+                    <div className="move-card__meta-row">
+                      <UserRound size={14} className="move-card__meta-icon" />
+                      <span>Hosted by {move.hostName}</span>
+                    </div>
                   </div>
                   <div className="move-card__footer">
-                    <span className="attendee-count">{move.attendees.length} going</span>
+                    <span className="attendee-count attendee-count--with-icon">
+                      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                        <circle cx="12" cy="7" r="4" fill="currentColor" />
+                        <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                      </svg>
+                      {move.attendees.length}/{move.maxParticipants}
+                    </span>
                     <div className="move-card__actions">
-                      <button
-                        className="btn btn--small"
-                        type="button"
-                        onClick={() => onSelectMove(move.id)}
-                      >
-                        Details
-                      </button>
                       <button
                         className="save-toggle-btn"
                         type="button"
                         aria-label={`Unsave ${move.title}`}
                         aria-pressed="true"
-                        onClick={() => void unsaveMove(move.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void unsaveMove(move.id);
+                        }}
                         title="Remove from saved"
                       >
                         <Star
@@ -790,6 +870,30 @@ export const ExploreScreen = ({
                           fill="currentColor"
                         />
                       </button>
+                      {move.attendees.includes(userName) ? (
+                        <button
+                          className="btn btn--small btn--ghost"
+                          type="button"
+                          aria-label={`Leave ${move.title}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLeaveMove(move.id);
+                          }}
+                        >
+                          Leave
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn--small btn--primary"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onJoinMove(move.id);
+                          }}
+                        >
+                          Join
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -88,6 +88,37 @@ export const formatEventTimeOnly = (isoTime: string) => {
   });
 };
 
+/** Format event date range with relative day (Today/Tomorrow/weekday) for card display */
+export const formatDateRangeWithRelative = (
+  startIso: string,
+  endIso: string,
+  now: number
+): string => {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return `${startIso}-${endIso}`;
+
+  const dateStr = start.toLocaleDateString(undefined, {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+  });
+  const startTime = start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  const endTime = end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+  const todayStr = new Date(now).toDateString();
+  const tomorrowStr = new Date(now + 24 * 60 * 60 * 1000).toDateString();
+  const startDayStr = start.toDateString();
+  const relative =
+    startDayStr === todayStr
+      ? 'Today'
+      : startDayStr === tomorrowStr
+        ? 'Tomorrow'
+        : start.toLocaleDateString(undefined, { weekday: 'short' });
+
+  return `${dateStr}, ${startTime}-${endTime} (${relative})`;
+};
+
 export const getStatusLabel = (startTime: string, endTime: string, now: number) => {
   const start = new Date(startTime).getTime();
   const end = new Date(endTime).getTime();
@@ -111,10 +142,10 @@ export const calculateDistance = (
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
   return distance;
 };

@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import type { Move } from '../types';
-import { formatTimeAgo, formatEventTime, getStatusLabel } from '../utilities/helpers';
+import { formatDateRangeWithRelative, getStatusLabel } from '../utilities/helpers';
 import { useSavedMoves } from '../contexts/SavedMovesContext';
-import { Star } from 'lucide-react';
+import { CalendarClock, MapPin, Star, UserRound } from 'lucide-react';
+import { activityIcons } from './activityIcons';
 
 type MyMovesScreenProps = {
   allMoves: Move[];
   joinedMoves: Move[];
   hostingMoves: Move[];
   now: number;
+  userName: string;
   onCancelMove: (moveId: string) => void;
+  onJoinMove: (moveId: string) => void;
   onLeaveMove: (moveId: string) => void;
   onSelectMove: (moveId: string) => void;
   onEditMove?: (moveId: string) => void;
@@ -20,7 +23,9 @@ export const MyMovesScreen = ({
   joinedMoves,
   hostingMoves,
   now,
+  userName,
   onCancelMove,
+  onJoinMove,
   onLeaveMove,
   onSelectMove,
   onEditMove,
@@ -76,49 +81,74 @@ export const MyMovesScreen = ({
             ) : (
               joinedMoves.map((move) => (
                 <article key={move.id} className="move-card move-card--compact">
-                  <div className="move-card__content">
-                    <div className="move-card__header">
+                  <div
+                    className="move-card__content move-card__content--clickable"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${move.title}`}
+                    onClick={() => onSelectMove(move.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectMove(move.id);
+                      }
+                    }}
+                  >
+                    <div className="move-card__header move-card__header--single-row">
                       <div>
                         <h3>{move.title}</h3>
-                        <p className="move-card__subtitle">Hosted by {move.hostName}</p>
                       </div>
                       <div className="move-card__status">
-                        <span
-                          className={`status-badge ${
-                            getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                        <div className="move-card__status-row">
+                          <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                          <span
+                            className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
                               ? 'status-badge--past'
                               : ''
-                          }`}
-                        >
-                          {getStatusLabel(move.startTime, move.endTime, now)}
-                        </span>
-                        <span className="move-card__time">
-                          {formatTimeAgo(move.createdAt, now)}
-                        </span>
+                              }`}
+                          >
+                            <span
+                              className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                                .toLowerCase()
+                                .replace(' ', '-')}`}
+                              aria-hidden="true"
+                            />
+                            {getStatusLabel(move.startTime, move.endTime, now)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="move-card__meta">
-                      <span>{move.locationName || move.location}</span>
-                      <span>
-                        {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
-                      </span>
-                      <span>{move.activityType}</span>
+                    <div className="move-card__meta-stack">
+                      <div className="move-card__meta-row">
+                        <CalendarClock size={14} className="move-card__meta-icon" />
+                        <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <MapPin size={14} className="move-card__meta-icon" />
+                        <span>{(move.locationName || move.location).split(',')[0]}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <UserRound size={14} className="move-card__meta-icon" />
+                        <span>Hosted by {move.hostName}</span>
+                      </div>
                     </div>
                     <div className="move-card__footer">
-                      <span className="attendee-count">{move.attendees.length} going</span>
+                      <span className="attendee-count attendee-count--with-icon">
+                        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                          <circle cx="12" cy="7" r="4" fill="currentColor" />
+                          <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                        </svg>
+                        {move.attendees.length}/{move.maxParticipants}
+                      </span>
                       <div className="move-card__actions">
-                        <button
-                          className="btn btn--small"
-                          type="button"
-                          onClick={() => onSelectMove(move.id)}
-                        >
-                          Details
-                        </button>
                         <button
                           className="btn btn--small btn--ghost"
                           type="button"
                           aria-label={`Leave ${move.title}`}
-                          onClick={() => onLeaveMove(move.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLeaveMove(move.id);
+                          }}
                         >
                           Leave
                         </button>
@@ -140,47 +170,83 @@ export const MyMovesScreen = ({
             ) : (
               hostingMoves.map((move) => (
                 <article key={move.id} className="move-card move-card--compact">
-                  <div className="move-card__content">
-                    <div className="move-card__header">
+                  <div
+                    className="move-card__content move-card__content--clickable"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${move.title}`}
+                    onClick={() => onSelectMove(move.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectMove(move.id);
+                      }
+                    }}
+                  >
+                    <div className="move-card__header move-card__header--single-row">
                       <div>
                         <h3>{move.title}</h3>
-                        <p className="move-card__subtitle">You&apos;re hosting</p>
                       </div>
                       <div className="move-card__status">
-                        <span
-                          className={`status-badge ${
-                            getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                        <div className="move-card__status-row">
+                          <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                          <span
+                            className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
                               ? 'status-badge--past'
                               : ''
-                          }`}
-                        >
-                          {getStatusLabel(move.startTime, move.endTime, now)}
-                        </span>
-                        <span className="move-card__time">
-                          {formatTimeAgo(move.createdAt, now)}
-                        </span>
+                              }`}
+                          >
+                            <span
+                              className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                                .toLowerCase()
+                                .replace(' ', '-')}`}
+                              aria-hidden="true"
+                            />
+                            {getStatusLabel(move.startTime, move.endTime, now)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="move-card__meta">
-                      <span>{move.locationName || move.location}</span>
-                      <span>
-                        {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
-                      </span>
+                    <div className="move-card__meta-stack">
+                      <div className="move-card__meta-row">
+                        <CalendarClock size={14} className="move-card__meta-icon" />
+                        <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <MapPin size={14} className="move-card__meta-icon" />
+                        <span>{(move.locationName || move.location).split(',')[0]}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <UserRound size={14} className="move-card__meta-icon" />
+                        <span>You&apos;re hosting</span>
+                      </div>
                     </div>
                     <div className="move-card__footer">
-                      <span className="attendee-count">{move.attendees.length} going</span>
+                      <span className="attendee-count attendee-count--with-icon">
+                        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                          <circle cx="12" cy="7" r="4" fill="currentColor" />
+                          <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                        </svg>
+                        {move.attendees.length}/{move.maxParticipants}
+                      </span>
                       <div className="move-card__actions">
                         <button
                           className="btn btn--ghost btn--small"
                           type="button"
-                          onClick={() => onEditMove?.(move.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditMove?.(move.id);
+                          }}
                         >
                           Edit
                         </button>
                         <button
                           className="btn btn--ghost btn--small"
                           type="button"
-                          onClick={() => onCancelMove(move.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCancelMove(move.id);
+                          }}
                           aria-label="Cancel move"
                         >
                           <svg
@@ -197,13 +263,6 @@ export const MyMovesScreen = ({
                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                           </svg>
-                        </button>
-                        <button
-                          className="btn btn--small"
-                          type="button"
-                          onClick={() => onSelectMove(move.id)}
-                        >
-                          Details
                         </button>
                       </div>
                     </div>
@@ -223,50 +282,75 @@ export const MyMovesScreen = ({
             ) : (
               savedMoves.map((move) => (
                 <article key={move.id} className="move-card move-card--compact">
-                  <div className="move-card__content">
-                    <div className="move-card__header">
+                  <div
+                    className="move-card__content move-card__content--clickable"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${move.title}`}
+                    onClick={() => onSelectMove(move.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectMove(move.id);
+                      }
+                    }}
+                  >
+                    <div className="move-card__header move-card__header--single-row">
                       <div>
                         <h3>{move.title}</h3>
-                        <p className="move-card__subtitle">Hosted by {move.hostName}</p>
                       </div>
                       <div className="move-card__status">
-                        <span
-                          className={`status-badge ${
-                            getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                        <div className="move-card__status-row">
+                          <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                          <span
+                            className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
                               ? 'status-badge--past'
                               : ''
-                          }`}
-                        >
-                          {getStatusLabel(move.startTime, move.endTime, now)}
-                        </span>
-                        <span className="move-card__time">
-                          {formatTimeAgo(move.createdAt, now)}
-                        </span>
+                              }`}
+                          >
+                            <span
+                              className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                                .toLowerCase()
+                                .replace(' ', '-')}`}
+                              aria-hidden="true"
+                            />
+                            {getStatusLabel(move.startTime, move.endTime, now)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="move-card__meta">
-                      <span>{move.locationName || move.location}</span>
-                      <span>
-                        {formatEventTime(move.startTime)} - {formatEventTime(move.endTime)}
-                      </span>
-                      <span>{move.activityType}</span>
+                    <div className="move-card__meta-stack">
+                      <div className="move-card__meta-row">
+                        <CalendarClock size={14} className="move-card__meta-icon" />
+                        <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <MapPin size={14} className="move-card__meta-icon" />
+                        <span>{(move.locationName || move.location).split(',')[0]}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <UserRound size={14} className="move-card__meta-icon" />
+                        <span>Hosted by {move.hostName}</span>
+                      </div>
                     </div>
                     <div className="move-card__footer">
-                      <span className="attendee-count">{move.attendees.length} going</span>
+                      <span className="attendee-count attendee-count--with-icon">
+                        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                          <circle cx="12" cy="7" r="4" fill="currentColor" />
+                          <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                        </svg>
+                        {move.attendees.length}/{move.maxParticipants}
+                      </span>
                       <div className="move-card__actions">
-                        <button
-                          className="btn btn--small"
-                          type="button"
-                          onClick={() => onSelectMove(move.id)}
-                        >
-                          Details
-                        </button>
                         <button
                           className="save-toggle-btn"
                           type="button"
                           aria-label={`Unsave ${move.title}`}
                           aria-pressed="true"
-                          onClick={() => void unsaveMove(move.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void unsaveMove(move.id);
+                          }}
                           title="Remove from saved"
                         >
                           <Star
@@ -275,6 +359,30 @@ export const MyMovesScreen = ({
                             fill="currentColor"
                           />
                         </button>
+                        {move.attendees.includes(userName) ? (
+                          <button
+                            className="btn btn--small btn--ghost"
+                            type="button"
+                            aria-label={`Leave ${move.title}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onLeaveMove(move.id);
+                            }}
+                          >
+                            Leave
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn--small btn--primary"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onJoinMove(move.id);
+                            }}
+                          >
+                            Join
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -285,4 +393,5 @@ export const MyMovesScreen = ({
         )}
       </div>
     </section>
-  )};
+  );
+};
