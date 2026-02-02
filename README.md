@@ -17,7 +17,7 @@ cd your-app-name
 npm install
 ```
 
-## Test
+## Testing
 
 There is no code to test. This is a shell for writing an app vision for CoPilot to fill in.
 
