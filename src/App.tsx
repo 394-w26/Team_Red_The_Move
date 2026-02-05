@@ -287,7 +287,6 @@ const App = () => {
             <div>
               <p className="eyebrow">Northwestern Student Hangouts</p>
               <h1>The Move</h1>
-              <p className="tagline">A live feed for spontaneous campus plans.</p>
             </div>
           </header>
           <main className="app-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -310,7 +309,6 @@ const App = () => {
           <div>
             <p className="eyebrow">Northwestern Student Hangouts</p>
             <h1>The Move</h1>
-            <p className="tagline">A live feed for spontaneous campus plans.</p>
           </div>
           <button
             type="button"

@@ -38,7 +38,6 @@ export const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
         <div className="login-content">
           <h2>Welcome to The Move!</h2>
           {/* <p>Sign in with your Google account to get started.</p> */}
-          <p className="tagline">A live feed for spontaneous campus plans.</p>
 
           {error && <div className="login-error">{error}</div>}
 
