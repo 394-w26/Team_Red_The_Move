@@ -2424,26 +2424,47 @@ img {
   }
 }
 
-/* Map Overlay Modal */
+/* Map Overlay Modal - portaled to body so always full viewport after "Allow" location */
 .map-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-width: 100vw !important;
+  min-height: 100vh !important;
   background: rgba(31, 26, 43, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
-  z-index: 150;
+  z-index: 9999;
   animation: fadeIn 0.3s ease;
 }
 
 .map-header {
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(31, 26, 43, 0.08);
+  position: relative;
+  z-index: 10001;
+}
+
+/* Keep map content below header (Leaflet uses z-index up to ~1000) */
+.map-container-fullscreen {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .map-header h2 {
@@ -2470,6 +2491,14 @@ img {
 .map-close-btn:hover {
   background: rgba(78, 42, 132, 0.2);
   transform: scale(1.05);
+}
+
+/* Fixed close button - always on top (overlay is portaled to body) */
+.map-close-btn--fixed {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 10002;
 }
 
 /* "I'm here" button on map */
@@ -2500,11 +2529,6 @@ img {
 
 .map-center-btn:active {
   transform: scale(0.95);
-}
-
-.map-container-fullscreen {
-  flex: 1;
-  overflow: hidden;
 }
 
 /* Mobile Responsive Styles */
@@ -2817,6 +2841,22 @@ img {
   }
 }
 
+/* Location prompt overlay when in map view - above map overlay so Enable → Allow is visible */
+.location-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10003;
+  padding: 16px 24px;
+  pointer-events: none;
+}
+
+.location-prompt-overlay .location-prompt {
+  pointer-events: auto;
+  margin: 0;
+}
+
 /* Location prompt banner styles */
 .location-prompt {
   position: relative;
@@ -2877,7 +2917,21 @@ img {
   z-index: 1000 !important;
 }
 
-/* Distance info in move card */
+/* Location + distance stacked (icon left, text block right) */
+.move-card__meta-location {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.move-card__meta-location .move-card__distance {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-left: 0;
+}
+
+/* Distance info in move card (inline fallback) */
 .move-card__distance {
   color: var(--muted);
   font-size: 0.85rem;

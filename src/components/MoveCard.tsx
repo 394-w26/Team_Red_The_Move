@@ -144,10 +144,12 @@ export const MoveCard = ({
             </div>
             <div className="move-card__meta-row">
               <MapPin size={14} className="move-card__meta-icon" />
-              <span>{displayLocation}</span>
-              {displayDistance && (
-                <span className="move-card__distance">• {displayDistance} away</span>
-              )}
+              <div className="move-card__meta-location">
+                <span>{displayLocation}</span>
+                {displayDistance && (
+                  <span className="move-card__distance">{displayDistance} away</span>
+                )}
+              </div>
             </div>
             <div className="move-card__meta-row">
               <UserRound size={14} className="move-card__meta-icon" />

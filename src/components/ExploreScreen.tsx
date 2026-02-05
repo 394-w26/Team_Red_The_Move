@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Map as MapIcon, List as ListIcon, CalendarClock, MapPin, Star, UserRound } from 'lucide-react';
 import type { Move, CampusArea, ActivityType } from '../types';
@@ -222,34 +223,44 @@ export const ExploreScreen = ({
 
   const myActiveMovesCount = joinedActiveMoves.length + hostingActiveMoves.length;
 
+  const locationPromptContent = (
+    <div className="location-prompt">
+      <MapPin size={18} />
+      <p>Enable location to see where you are</p>
+      <div className="location-prompt-actions">
+        <button
+          type="button"
+          className="btn btn--small btn--primary"
+          onClick={() => {
+            requestLocation();
+            setShowLocationPrompt(false);
+          }}
+          disabled={isLocationLoading}
+        >
+          {isLocationLoading ? 'Loading...' : 'Enable'}
+        </button>
+        <button
+          type="button"
+          className="btn btn--small btn--ghost"
+          onClick={() => setShowLocationPrompt(false)}
+        >
+          Skip
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {showLocationPrompt && (
-        <div className="location-prompt">
-          <MapPin size={18} />
-          <p>Enable location to see where you are</p>
-          <div className="location-prompt-actions">
-            <button
-              type="button"
-              className="btn btn--small btn--primary"
-              onClick={() => {
-                requestLocation();
-                setShowLocationPrompt(false);
-              }}
-              disabled={isLocationLoading}
-            >
-              {isLocationLoading ? 'Loading...' : 'Enable'}
-            </button>
-            <button
-              type="button"
-              className="btn btn--small btn--ghost"
-              onClick={() => setShowLocationPrompt(false)}
-            >
-              Skip
-            </button>
-          </div>
-        </div>
+      {/* In map view, portal the prompt on top of the map overlay so it's visible */}
+      {showLocationPrompt && viewMode === 'map' && createPortal(
+        <div className="location-prompt-overlay">
+          {locationPromptContent}
+        </div>,
+        document.body
       )}
+      {/* In list view, show prompt inline */}
+      {showLocationPrompt && viewMode !== 'map' && locationPromptContent}
 
       {/* Tab Navigation for Explore, Joined, Hosting, Saved */}
       <div ref={tabsContainerRef}>

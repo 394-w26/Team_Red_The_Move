@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -7,6 +9,29 @@ import { getDefaultCoordinatesForArea } from '../utilities/locations';
 import { MoveCard } from './MoveCard';
 
 const { BaseLayer } = LayersControl;
+
+// Invalidate map size when overlay mounts, userLocation changes, or window resizes (fixes layout after "Allow" location)
+const MapResizeHandler = ({ userLocation }: { userLocation?: { latitude: number; longitude: number } | null }) => {
+  const map = useMap();
+  useEffect(() => {
+    const run = () => {
+      map.invalidateSize();
+    };
+    run();
+    const t1 = setTimeout(run, 150);
+    const t2 = setTimeout(run, 500);
+    const onResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [map, userLocation]);
+  return null;
+};
 
 // Component to handle centering map on user location
 const CenterMapButton = ({ userLocation }: { userLocation?: { latitude: number; longitude: number } | null }) => {
@@ -133,21 +158,24 @@ export const MapView = ({
   const mapCenter = [42.0500, -87.6750] as [number, number];
   const mapZoom = 14;
 
-  return (
+  const overlayContent = (
     <div className="map-overlay">
       <div className="map-header">
         <h2>Map View</h2>
+      </div>
+      {onClose && (
         <button
           type="button"
-          className="map-close-btn"
+          className="map-close-btn map-close-btn--fixed"
           onClick={onClose}
           aria-label="Close map view"
         >
           <X size={24} />
         </button>
-      </div>
+      )}
       <div className="map-container-fullscreen">
         <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
+          <MapResizeHandler userLocation={userLocation} />
           {/* Center on user location button */}
           <CenterMapButton userLocation={userLocation} />
           
@@ -224,4 +252,6 @@ export const MapView = ({
       </div>
     </div>
   );
+
+  return createPortal(overlayContent, document.body);
 };
