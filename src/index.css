@@ -1467,15 +1467,15 @@ img {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  width: 64px;
-  height: 64px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   background: var(--purple);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 32px rgba(78, 42, 132, 0.4);
+  box-shadow: 0 0 20px rgba(200, 150, 255, 0.6), 0 0 40px rgba(200, 150, 255, 0.3);
   transition: all 0.3s ease;
   z-index: 10;
   border: none;
@@ -1484,7 +1484,7 @@ img {
 
 .floating-create-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 16px 40px rgba(78, 42, 132, 0.5);
+  box-shadow: 0 0 28px rgba(200, 150, 255, 0.8), 0 0 50px rgba(200, 150, 255, 0.4);
   background: var(--plum);
 }
 
@@ -2662,8 +2662,8 @@ img {
 
   /* Floating Button */
   .floating-create-btn {
-    width: 56px;
-    height: 56px;
+    width: 75px;
+    height: 75px;
     bottom: 20px;
     right: 20px;
   }
@@ -2778,8 +2778,8 @@ img {
 
   /* Floating Button - slightly smaller on very small screens */
   .floating-create-btn {
-    width: 52px;
-    height: 52px;
+    width: 75px;
+    height: 75px;
     bottom: 16px;
     right: 16px;
   }
