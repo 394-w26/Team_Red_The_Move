@@ -16,8 +16,11 @@ type ExploreScreenProps = {
   userName: string;
   joinedMoves: Move[];
   hostingMoves: Move[];
+  waitlistMoves: Move[];
   onJoinMove: (moveId: string) => void;
   onLeaveMove: (moveId: string) => void;
+  onJoinWaitlist: (moveId: string) => void;
+  onLeaveWaitlist: (moveId: string) => void;
   onSelectMove: (moveId: string) => void;
   onCancelMove: (moveId: string) => void;
   onEditMove?: (moveId: string) => void;
@@ -29,8 +32,11 @@ export const ExploreScreen = ({
   userName,
   joinedMoves,
   hostingMoves,
+  waitlistMoves,
   onJoinMove,
   onLeaveMove,
+  onJoinWaitlist,
+  onLeaveWaitlist,
   onSelectMove,
   onCancelMove,
   onEditMove,
@@ -44,7 +50,7 @@ export const ExploreScreen = ({
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'upcoming' | 'newest' | 'popularity'>('upcoming');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [activeView, setActiveView] = useState<'explore' | 'joined' | 'hosting' | 'saved'>('explore');
+  const [activeView, setActiveView] = useState<'explore' | 'joined' | 'hosting' | 'saved' | 'waitlist'>('explore');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [showMyUpcoming, setShowMyUpcoming] = useState(false);
 
@@ -300,6 +306,15 @@ export const ExploreScreen = ({
           <button
             type="button"
             role="tab"
+            aria-selected={activeView === 'waitlist'}
+            className={`my-moves-tab ${activeView === 'waitlist' ? 'my-moves-tab--active' : ''}`}
+            onClick={() => setActiveView('waitlist')}
+          >
+            Waitlist
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={activeView === 'saved'}
             className={`my-moves-tab ${activeView === 'saved' ? 'my-moves-tab--active' : ''}`}
             onClick={() => setActiveView('saved')}
@@ -538,6 +553,8 @@ export const ExploreScreen = ({
                       userName={userName}
                       onJoinMove={onJoinMove}
                       onLeaveMove={onLeaveMove}
+                      onJoinWaitlist={onJoinWaitlist}
+                      onLeaveWaitlist={onLeaveWaitlist}
                       onSelectMove={onSelectMove}
                       userLocation={userLocation}
                     />
@@ -566,6 +583,8 @@ export const ExploreScreen = ({
                   userName={userName}
                   onJoinMove={onJoinMove}
                   onLeaveMove={onLeaveMove}
+                  onJoinWaitlist={onJoinWaitlist}
+                  onLeaveWaitlist={onLeaveWaitlist}
                   onSelectMove={onSelectMove}
                   userLocation={userLocation}
                 />
@@ -910,6 +929,105 @@ export const ExploreScreen = ({
                 </div>
               </article>
             ))
+          )}
+        </section>
+      )}
+
+      {/* Waitlist View */}
+      {activeView === 'waitlist' && (
+        <section className="move-list">
+          {waitlistMoves.length === 0 ? (
+            <div className="empty-state">
+              <h3>No waitlist moves</h3>
+              <p>Join waitlists for full events from Explore to see them here.</p>
+            </div>
+          ) : (
+            waitlistMoves.map((move) => {
+              const waitlist = Array.isArray(move.waitlist) ? move.waitlist : [];
+              const waitlistPosition = waitlist.indexOf(userName) + 1;
+              
+              return (
+                <article key={move.id} className="move-card move-card--compact">
+                  <div
+                    className="move-card__content move-card__content--clickable"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${move.title}`}
+                    onClick={() => onSelectMove(move.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectMove(move.id);
+                      }
+                    }}
+                  >
+                    <div className="move-card__header move-card__header--single-row">
+                      <div>
+                        <h3>{move.title}</h3>
+                        <p style={{ fontSize: '0.85rem', color: '#6a6279', margin: '4px 0 0 0' }}>
+                          Position #{waitlistPosition} in waitlist
+                        </p>
+                      </div>
+                      <div className="move-card__status">
+                        <div className="move-card__status-row">
+                          <span className="move-card__badge">{activityIcons[move.activityType]}</span>
+                          <span
+                            className={`status-badge ${getStatusLabel(move.startTime, move.endTime, now) === 'Past'
+                              ? 'status-badge--past'
+                              : ''
+                              }`}
+                          >
+                            <span
+                              className={`status-dot status-dot--${getStatusLabel(move.startTime, move.endTime, now)
+                                .toLowerCase()
+                                .replace(' ', '-')}`}
+                              aria-hidden="true"
+                            />
+                            {getStatusLabel(move.startTime, move.endTime, now)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="move-card__meta-stack">
+                      <div className="move-card__meta-row">
+                        <CalendarClock size={14} className="move-card__meta-icon" />
+                        <span>{formatDateRangeWithRelative(move.startTime, move.endTime, now)}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <MapPin size={14} className="move-card__meta-icon" />
+                        <span>{(move.locationName || move.location).split(',')[0]}</span>
+                      </div>
+                      <div className="move-card__meta-row">
+                        <UserRound size={14} className="move-card__meta-icon" />
+                        <span>Hosted by {move.hostName}</span>
+                      </div>
+                    </div>
+                    <div className="move-card__footer">
+                      <span className="attendee-count attendee-count--with-icon">
+                        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                          <circle cx="12" cy="7" r="4" fill="currentColor" />
+                          <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                        </svg>
+                        {move.attendees.length}/{move.maxParticipants} • {waitlist.length} waiting
+                      </span>
+                      <div className="move-card__actions">
+                        <button
+                          className="btn btn--small btn--ghost"
+                          type="button"
+                          aria-label={`Leave waitlist for ${move.title}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLeaveWaitlist(move.id);
+                          }}
+                        >
+                          Leave Waitlist
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })
           )}
         </section>
       )}

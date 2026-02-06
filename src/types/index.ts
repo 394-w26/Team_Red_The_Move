@@ -36,6 +36,7 @@ export type Move = {
   hostId: string;
   hostName: string;
   attendees: string[];
+  waitlist: string[];
   maxParticipants: number;
   comments: Comment[];
 };

@@ -37,6 +37,7 @@ export const firestoreDocToMove = (docData: DocumentData, docId: string): Move =
     hostId: docData.hostId ?? '',
     hostName: docData.hostName ?? '',
     attendees,
+    waitlist: Array.isArray(docData.waitlist) ? docData.waitlist : [],
     maxParticipants: safeMaxParticipants,
     comments: Array.isArray(docData.comments) ? docData.comments : [],
   };

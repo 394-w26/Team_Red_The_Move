@@ -90,6 +90,17 @@ const App = () => {
     );
   }, [moves, user.id, now]);
 
+  const waitlistMoves = useMemo(() => {
+    return sortByNewest(
+      moves.filter((move) => {
+        const waitlist = Array.isArray(move.waitlist) ? move.waitlist : [];
+        const isOnWaitlist = waitlist.includes(user.name);
+        if (!isOnWaitlist) return false;
+        return new Date(move.endTime).getTime() >= now;
+      }),
+    );
+  }, [moves, user.name, now]);
+
   const handleJoinMove = async (moveId: string) => {
     const move = moves.find((m) => m.id === moveId);
     if (!move || move.attendees.includes(user.name)) return;
@@ -137,8 +148,20 @@ const App = () => {
 
     try {
       const moveRef = doc(db, 'moves', moveId);
+      const updatedAttendees = move.attendees.filter((name) => name !== user.name);
+      const waitlist = Array.isArray(move.waitlist) ? move.waitlist : [];
+      
+      // If there's someone on the waitlist, promote them
+      let updatedWaitlist = waitlist;
+      if (waitlist.length > 0 && updatedAttendees.length < move.maxParticipants) {
+        const nextPerson = waitlist[0];
+        updatedAttendees.push(nextPerson);
+        updatedWaitlist = waitlist.slice(1);
+      }
+      
       await updateDoc(moveRef, {
-        attendees: move.attendees.filter((name) => name !== user.name),
+        attendees: updatedAttendees,
+        waitlist: updatedWaitlist,
       });
       setSelectedMoveId((current) => (current === moveId ? null : current));
     } catch (error) {
@@ -153,6 +176,41 @@ const App = () => {
       setSelectedMoveId((current) => (current === moveId ? null : current));
     } catch (error) {
       console.error('Error canceling move:', error);
+    }
+  };
+
+  const handleJoinWaitlist = async (moveId: string) => {
+    const move = moves.find((m) => m.id === moveId);
+    if (!move) return;
+    
+    const waitlist = Array.isArray(move.waitlist) ? move.waitlist : [];
+    if (waitlist.includes(user.name) || move.attendees.includes(user.name)) return;
+    if (new Date(move.endTime).getTime() < Date.now()) return;
+
+    try {
+      const moveRef = doc(db, 'moves', moveId);
+      await updateDoc(moveRef, {
+        waitlist: [...waitlist, user.name],
+      });
+    } catch (error) {
+      console.error('Error joining waitlist:', error);
+    }
+  };
+
+  const handleLeaveWaitlist = async (moveId: string) => {
+    const move = moves.find((m) => m.id === moveId);
+    if (!move) return;
+    
+    const waitlist = Array.isArray(move.waitlist) ? move.waitlist : [];
+    if (!waitlist.includes(user.name)) return;
+
+    try {
+      const moveRef = doc(db, 'moves', moveId);
+      await updateDoc(moveRef, {
+        waitlist: waitlist.filter((name) => name !== user.name),
+      });
+    } catch (error) {
+      console.error('Error leaving waitlist:', error);
     }
   };
 
@@ -227,6 +285,7 @@ const App = () => {
         hostId: user.id,
         hostName: user.name,
         attendees: [user.name],
+        waitlist: [],
         maxParticipants: normalizedMaxParticipants,
         comments: [],
       });
@@ -327,8 +386,11 @@ const App = () => {
             userName={user.name}
             joinedMoves={joinedMoves}
             hostingMoves={hostingMoves}
+            waitlistMoves={waitlistMoves}
             onJoinMove={handleJoinMove}
             onLeaveMove={handleLeaveMove}
+            onJoinWaitlist={handleJoinWaitlist}
+            onLeaveWaitlist={handleLeaveWaitlist}
             onSelectMove={setSelectedMoveId}
             onCancelMove={handleCancelMove}
             onEditMove={setEditingMoveId}

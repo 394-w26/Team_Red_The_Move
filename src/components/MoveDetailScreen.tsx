@@ -242,6 +242,49 @@ export const MoveDetailScreen = ({
           )}
         </div>
 
+        {/* Waitlist Section (visible to host) */}
+        {move.hostId === userId && Array.isArray(move.waitlist) && move.waitlist.length > 0 && (
+          <div className="detail__attendees">
+            <div className="detail__attendees-header">
+              <h3>Waitlist</h3>
+              <span className="attendee-count attendee-count--with-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                  <circle cx="12" cy="7" r="4" fill="currentColor" />
+                  <path d="M4 21c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
+                </svg>
+                {move.waitlist.length}
+              </span>
+            </div>
+            <div className="detail__avatars">
+              {move.waitlist.slice(0, 10).map((attendee, index) => {
+                const initials = attendee
+                  .split(' ')
+                  .filter(Boolean)
+                  .map((part) => part[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase();
+                return (
+                  <span
+                    key={`${attendee}-${index}`}
+                    className="detail__avatar detail__avatar--filled"
+                    data-tooltip={`${attendee} (#${index + 1})`}
+                    aria-label={`${attendee}, position ${index + 1}`}
+                    style={{ opacity: 0.8 }}
+                  >
+                    {initials}
+                  </span>
+                );
+              })}
+              {move.waitlist.length > 10 && (
+                <span className="detail__avatar detail__avatar--filled" style={{ opacity: 0.8 }}>
+                  +{move.waitlist.length - 10}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="detail__comments">
           {new Date(move.endTime).getTime() < now ? (
             <p className="muted">Comments are closed for past events.</p>

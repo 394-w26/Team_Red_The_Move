@@ -52,6 +52,8 @@ export const MapMoveCard = ({
         onLeaveMove={onLeaveMove}
         onSelectMove={onSelectMove}
         distance={distance !== null ? formatDistance(distance) : null}
+        userLocation={userLocation}
+        variant="popup"
       />
     </div>
   );

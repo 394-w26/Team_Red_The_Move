@@ -10,6 +10,8 @@ type MoveCardProps = {
   userName: string;
   onJoinMove: (moveId: string) => void;
   onLeaveMove: (moveId: string) => void;
+  onJoinWaitlist?: (moveId: string) => void;
+  onLeaveWaitlist?: (moveId: string) => void;
   onSelectMove: (moveId: string) => void;
   distance?: string | null;
   userLocation?: { latitude: number; longitude: number } | null;
@@ -22,6 +24,8 @@ export const MoveCard = ({
   userName,
   onJoinMove,
   onLeaveMove,
+  onJoinWaitlist,
+  onLeaveWaitlist,
   onSelectMove,
   distance,
   userLocation,
@@ -44,6 +48,8 @@ export const MoveCard = ({
 
   const isJoined = move.attendees.includes(userName);
   const isHost = move.hostName === userName;
+  const waitlist = Array.isArray(move.waitlist) ? move.waitlist : [];
+  const isOnWaitlist = waitlist.includes(userName);
   const statusLabel = getStatusLabel(move.startTime, move.endTime, now);
   const fullLocation = move.locationName || move.location;
   // Truncate location to the first part (before the first comma) for the card view
@@ -224,6 +230,30 @@ export const MoveCard = ({
                 }}
               >
                 Leave
+              </button>
+            ) : isOnWaitlist ? (
+              <button
+                className="btn btn--small btn--ghost"
+                type="button"
+                aria-label={`Leave waitlist for ${move.title}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (onLeaveWaitlist) onLeaveWaitlist(move.id);
+                }}
+              >
+                Leave Waitlist
+              </button>
+            ) : isFull && !isPast ? (
+              <button
+                className="btn btn--small btn--primary"
+                type="button"
+                aria-label={`Join waitlist for ${move.title}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (onJoinWaitlist) onJoinWaitlist(move.id);
+                }}
+              >
+                Join Waitlist
               </button>
             ) : (
               <button

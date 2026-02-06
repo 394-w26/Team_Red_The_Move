@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import { X, MapPin } from 'lucide-react';
 import type { Move, ActivityType } from '../types';
 import { getDefaultCoordinatesForArea } from '../utilities/locations';
-import { MoveCard } from './MoveCard';
+import { MapMoveCard } from './MapMoveCard';
 
 const { BaseLayer } = LayersControl;
 
@@ -219,17 +219,15 @@ export const MapView = ({
                 icon={createCategoryIcon(move.activityType)}
               >
                 <Popup>
-                  <div className="map-popup-card">
-                    <MoveCard
-                      move={move}
-                      now={now}
-                      userName={userName}
-                      onJoinMove={onJoinMove}
-                      onLeaveMove={onLeaveMove}
-                      onSelectMove={onSelectMove}
-                      variant="popup"
-                    />
-                  </div>
+                  <MapMoveCard
+                    move={move}
+                    now={now}
+                    userName={userName}
+                    onJoinMove={onJoinMove}
+                    onLeaveMove={onLeaveMove}
+                    onSelectMove={onSelectMove}
+                    userLocation={userLocation}
+                  />
                 </Popup>
               </Marker>
             );
